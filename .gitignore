@@ -1,0 +1,13 @@
+node_modules/
+dist/
+data/*.sqlite*
+*.tsbuildinfo
+artifacts/
+.impeccable/review/
+.impeccable/questions/
+.impeccable/*.local.json
+.env
+.env.*
+!.env.example
+*.log
+__pycache__/

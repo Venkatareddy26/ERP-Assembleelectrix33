@@ -1,0 +1,14 @@
+export type Product={id:string;name:string};
+export type Material=Product&{unit:string};
+export type BomLine={productId:string;materialId:string;quantity:number;sourceRow:number};
+export type Bom={source:string;sheet:string;sha256:string;products:Product[];materials:Material[];lines:BomLine[];excluded:unknown[]};
+export type Customer={id:string;name:string;contact:string};
+export type Rate={id:string;customerId:string;productId:string;ratePaise:number};
+export type Worker={id:string;name:string;type:'piece'|'salary';ratePaise:number};
+export type Inward={id:string;customerId:string;materialId:string;quantity:number;challan:string;date:string};
+export type Order={id:string;number:string;customerId:string;productId:string;quantity:number;ratePaise:number;due:string};
+export type Production={id:string;orderId:string;workerId:string;quantity:number;accepted:number;rejected:number;inspected:boolean;wageRatePaise:number;date:string;note?:string;createdAt?:string;inspectedAt?:string;consumption:{materialId:string;quantity:number}[]};
+export type Dispatch={id:string;number:string;orderId:string;quantity:number;challan:string;date:string};
+export type Invoice={id:string;number:string;orderId:string;quantity:number;ratePaise:number;amountPaise:number;date:string};
+export type State={revision:number;customers:Customer[];rates:Rate[];workers:Worker[];inwards:Inward[];orders:Order[];production:Production[];dispatches:Dispatch[];invoices:Invoice[];audit:{id:string;action:string;recordId:string;createdAt:string;actor?:string}[]};
+export type Workspace={mode:'demo'|'actual';bom:Bom;state:State};

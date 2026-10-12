@@ -1,0 +1,676 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-12T17:30:18.011463+00:00",
+  "title": "Design System: Assemble Electrix",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Primary",
+        "tonalRamp": [
+          "oklch(15% 0.0942 182.38)",
+          "oklch(26% 0.0942 182.38)",
+          "oklch(38% 0.0942 182.38)",
+          "oklch(49% 0.0942 182.38)",
+          "oklch(61% 0.0942 182.38)",
+          "oklch(72% 0.0942 182.38)",
+          "oklch(84% 0.0942 182.38)",
+          "oklch(95% 0.0942 182.38)"
+        ]
+      },
+      "workshop": {
+        "role": "neutral",
+        "displayName": "Workshop",
+        "tonalRamp": [
+          "oklch(15% 0.0359 219.80)",
+          "oklch(26% 0.0359 219.80)",
+          "oklch(38% 0.0359 219.80)",
+          "oklch(49% 0.0359 219.80)",
+          "oklch(61% 0.0359 219.80)",
+          "oklch(72% 0.0359 219.80)",
+          "oklch(84% 0.0359 219.80)",
+          "oklch(95% 0.0359 219.80)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Foreground",
+        "tonalRamp": [
+          "oklch(15% 0.0367 218.61)",
+          "oklch(26% 0.0367 218.61)",
+          "oklch(38% 0.0367 218.61)",
+          "oklch(49% 0.0367 218.61)",
+          "oklch(61% 0.0367 218.61)",
+          "oklch(72% 0.0367 218.61)",
+          "oklch(84% 0.0367 218.61)",
+          "oklch(95% 0.0367 218.61)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Background",
+        "tonalRamp": [
+          "oklch(15% 0.0025 228.78)",
+          "oklch(26% 0.0025 228.78)",
+          "oklch(38% 0.0025 228.78)",
+          "oklch(49% 0.0025 228.78)",
+          "oklch(61% 0.0025 228.78)",
+          "oklch(72% 0.0025 228.78)",
+          "oklch(84% 0.0025 228.78)",
+          "oklch(95% 0.0025 228.78)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Secondary",
+        "tonalRamp": [
+          "oklch(15% 0.0096 189.06)",
+          "oklch(26% 0.0096 189.06)",
+          "oklch(38% 0.0096 189.06)",
+          "oklch(49% 0.0096 189.06)",
+          "oklch(61% 0.0096 189.06)",
+          "oklch(72% 0.0096 189.06)",
+          "oklch(84% 0.0096 189.06)",
+          "oklch(95% 0.0096 189.06)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15% 0.0045 214.33)",
+          "oklch(26% 0.0045 214.33)",
+          "oklch(38% 0.0045 214.33)",
+          "oklch(49% 0.0045 214.33)",
+          "oklch(61% 0.0045 214.33)",
+          "oklch(72% 0.0045 214.33)",
+          "oklch(84% 0.0045 214.33)",
+          "oklch(95% 0.0045 214.33)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Muted Foreground",
+        "tonalRamp": [
+          "oklch(15% 0.0289 215.42)",
+          "oklch(26% 0.0289 215.42)",
+          "oklch(38% 0.0289 215.42)",
+          "oklch(49% 0.0289 215.42)",
+          "oklch(61% 0.0289 215.42)",
+          "oklch(72% 0.0289 215.42)",
+          "oklch(84% 0.0289 215.42)",
+          "oklch(95% 0.0289 215.42)"
+        ]
+      },
+      "accent": {
+        "role": "neutral",
+        "displayName": "Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0130 185.09)",
+          "oklch(26% 0.0130 185.09)",
+          "oklch(38% 0.0130 185.09)",
+          "oklch(49% 0.0130 185.09)",
+          "oklch(61% 0.0130 185.09)",
+          "oklch(72% 0.0130 185.09)",
+          "oklch(84% 0.0130 185.09)",
+          "oklch(95% 0.0130 185.09)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(15% 0.0105 219.59)",
+          "oklch(26% 0.0105 219.59)",
+          "oklch(38% 0.0105 219.59)",
+          "oklch(49% 0.0105 219.59)",
+          "oklch(61% 0.0105 219.59)",
+          "oklch(72% 0.0105 219.59)",
+          "oklch(84% 0.0105 219.59)",
+          "oklch(95% 0.0105 219.59)"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Focus",
+        "tonalRamp": [
+          "oklch(15% 0.0913 182.47)",
+          "oklch(26% 0.0913 182.47)",
+          "oklch(38% 0.0913 182.47)",
+          "oklch(49% 0.0913 182.47)",
+          "oklch(61% 0.0913 182.47)",
+          "oklch(72% 0.0913 182.47)",
+          "oklch(84% 0.0913 182.47)",
+          "oklch(95% 0.0913 182.47)"
+        ]
+      },
+      "attention": {
+        "role": "secondary",
+        "displayName": "Attention",
+        "tonalRamp": [
+          "oklch(15% 0.1192 67.85)",
+          "oklch(26% 0.1192 67.85)",
+          "oklch(38% 0.1192 67.85)",
+          "oklch(49% 0.1192 67.85)",
+          "oklch(61% 0.1192 67.85)",
+          "oklch(72% 0.1192 67.85)",
+          "oklch(84% 0.1192 67.85)",
+          "oklch(95% 0.1192 67.85)"
+        ]
+      },
+      "status-ok-bg": {
+        "role": "secondary",
+        "displayName": "Status Ok Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0166 162.75)",
+          "oklch(26% 0.0166 162.75)",
+          "oklch(38% 0.0166 162.75)",
+          "oklch(49% 0.0166 162.75)",
+          "oklch(61% 0.0166 162.75)",
+          "oklch(72% 0.0166 162.75)",
+          "oklch(84% 0.0166 162.75)",
+          "oklch(95% 0.0166 162.75)"
+        ]
+      },
+      "status-ok-text": {
+        "role": "secondary",
+        "displayName": "Status Ok Text",
+        "tonalRamp": [
+          "oklch(15% 0.0904 155.57)",
+          "oklch(26% 0.0904 155.57)",
+          "oklch(38% 0.0904 155.57)",
+          "oklch(49% 0.0904 155.57)",
+          "oklch(61% 0.0904 155.57)",
+          "oklch(72% 0.0904 155.57)",
+          "oklch(84% 0.0904 155.57)",
+          "oklch(95% 0.0904 155.57)"
+        ]
+      },
+      "status-warn-bg": {
+        "role": "secondary",
+        "displayName": "Status Warn Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0309 86.46)",
+          "oklch(26% 0.0309 86.46)",
+          "oklch(38% 0.0309 86.46)",
+          "oklch(49% 0.0309 86.46)",
+          "oklch(61% 0.0309 86.46)",
+          "oklch(72% 0.0309 86.46)",
+          "oklch(84% 0.0309 86.46)",
+          "oklch(95% 0.0309 86.46)"
+        ]
+      },
+      "status-warn-text": {
+        "role": "secondary",
+        "displayName": "Status Warn Text",
+        "tonalRamp": [
+          "oklch(15% 0.1002 72.83)",
+          "oklch(26% 0.1002 72.83)",
+          "oklch(38% 0.1002 72.83)",
+          "oklch(49% 0.1002 72.83)",
+          "oklch(61% 0.1002 72.83)",
+          "oklch(72% 0.1002 72.83)",
+          "oklch(84% 0.1002 72.83)",
+          "oklch(95% 0.1002 72.83)"
+        ]
+      },
+      "status-info-bg": {
+        "role": "secondary",
+        "displayName": "Status Info Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0125 255.51)",
+          "oklch(26% 0.0125 255.51)",
+          "oklch(38% 0.0125 255.51)",
+          "oklch(49% 0.0125 255.51)",
+          "oklch(61% 0.0125 255.51)",
+          "oklch(72% 0.0125 255.51)",
+          "oklch(84% 0.0125 255.51)",
+          "oklch(95% 0.0125 255.51)"
+        ]
+      },
+      "status-info-text": {
+        "role": "secondary",
+        "displayName": "Status Info Text",
+        "tonalRamp": [
+          "oklch(15% 0.0859 254.95)",
+          "oklch(26% 0.0859 254.95)",
+          "oklch(38% 0.0859 254.95)",
+          "oklch(49% 0.0859 254.95)",
+          "oklch(61% 0.0859 254.95)",
+          "oklch(72% 0.0859 254.95)",
+          "oklch(84% 0.0859 254.95)",
+          "oklch(95% 0.0859 254.95)"
+        ]
+      },
+      "status-neutral-bg": {
+        "role": "secondary",
+        "displayName": "Status Neutral Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0045 214.33)",
+          "oklch(26% 0.0045 214.33)",
+          "oklch(38% 0.0045 214.33)",
+          "oklch(49% 0.0045 214.33)",
+          "oklch(61% 0.0045 214.33)",
+          "oklch(72% 0.0045 214.33)",
+          "oklch(84% 0.0045 214.33)",
+          "oklch(95% 0.0045 214.33)"
+        ]
+      },
+      "status-neutral-text": {
+        "role": "secondary",
+        "displayName": "Status Neutral Text",
+        "tonalRamp": [
+          "oklch(15% 0.0310 214.04)",
+          "oklch(26% 0.0310 214.04)",
+          "oklch(38% 0.0310 214.04)",
+          "oklch(49% 0.0310 214.04)",
+          "oklch(61% 0.0310 214.04)",
+          "oklch(72% 0.0310 214.04)",
+          "oklch(84% 0.0310 214.04)",
+          "oklch(95% 0.0310 214.04)"
+        ]
+      },
+      "destructive": {
+        "role": "secondary",
+        "displayName": "Destructive",
+        "tonalRamp": [
+          "oklch(15% 0.1573 28.02)",
+          "oklch(26% 0.1573 28.02)",
+          "oklch(38% 0.1573 28.02)",
+          "oklch(49% 0.1573 28.02)",
+          "oklch(61% 0.1573 28.02)",
+          "oklch(72% 0.1573 28.02)",
+          "oklch(84% 0.1573 28.02)",
+          "oklch(95% 0.1573 28.02)"
+        ]
+      },
+      "nav-active": {
+        "role": "neutral",
+        "displayName": "Nav Active",
+        "tonalRamp": [
+          "oklch(15% 0.0457 215.08)",
+          "oklch(26% 0.0457 215.08)",
+          "oklch(38% 0.0457 215.08)",
+          "oklch(49% 0.0457 215.08)",
+          "oklch(61% 0.0457 215.08)",
+          "oklch(72% 0.0457 215.08)",
+          "oklch(84% 0.0457 215.08)",
+          "oklch(95% 0.0457 215.08)"
+        ]
+      },
+      "nav-hover": {
+        "role": "neutral",
+        "displayName": "Nav Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0384 217.06)",
+          "oklch(26% 0.0384 217.06)",
+          "oklch(38% 0.0384 217.06)",
+          "oklch(49% 0.0384 217.06)",
+          "oklch(61% 0.0384 217.06)",
+          "oklch(72% 0.0384 217.06)",
+          "oklch(84% 0.0384 217.06)",
+          "oklch(95% 0.0384 217.06)"
+        ]
+      },
+      "nav-marker": {
+        "role": "neutral",
+        "displayName": "Nav Marker",
+        "tonalRamp": [
+          "oklch(15% 0.0959 176.71)",
+          "oklch(26% 0.0959 176.71)",
+          "oklch(38% 0.0959 176.71)",
+          "oklch(49% 0.0959 176.71)",
+          "oklch(61% 0.0959 176.71)",
+          "oklch(72% 0.0959 176.71)",
+          "oklch(84% 0.0959 176.71)",
+          "oklch(95% 0.0959 176.71)"
+        ]
+      },
+      "overview-priority": {
+        "role": "neutral",
+        "displayName": "Overview Priority",
+        "tonalRamp": [
+          "oklch(15% 0.0035 219.53)",
+          "oklch(26% 0.0035 219.53)",
+          "oklch(38% 0.0035 219.53)",
+          "oklch(49% 0.0035 219.53)",
+          "oklch(61% 0.0035 219.53)",
+          "oklch(72% 0.0035 219.53)",
+          "oklch(84% 0.0035 219.53)",
+          "oklch(95% 0.0035 219.53)"
+        ]
+      },
+      "overview-priority-border": {
+        "role": "neutral",
+        "displayName": "Overview Priority Border",
+        "tonalRamp": [
+          "oklch(15% 0.0132 221.45)",
+          "oklch(26% 0.0132 221.45)",
+          "oklch(38% 0.0132 221.45)",
+          "oklch(49% 0.0132 221.45)",
+          "oklch(61% 0.0132 221.45)",
+          "oklch(72% 0.0132 221.45)",
+          "oklch(84% 0.0132 221.45)",
+          "oklch(95% 0.0132 221.45)"
+        ]
+      },
+      "overview-problem": {
+        "role": "secondary",
+        "displayName": "Overview Problem",
+        "tonalRamp": [
+          "oklch(15% 0.1572 27.21)",
+          "oklch(26% 0.1572 27.21)",
+          "oklch(38% 0.1572 27.21)",
+          "oklch(49% 0.1572 27.21)",
+          "oklch(61% 0.1572 27.21)",
+          "oklch(72% 0.1572 27.21)",
+          "oklch(84% 0.1572 27.21)",
+          "oklch(95% 0.1572 27.21)"
+        ]
+      },
+      "overview-waiting": {
+        "role": "secondary",
+        "displayName": "Overview Waiting",
+        "tonalRamp": [
+          "oklch(15% 0.0947 71.68)",
+          "oklch(26% 0.0947 71.68)",
+          "oklch(38% 0.0947 71.68)",
+          "oklch(49% 0.0947 71.68)",
+          "oklch(61% 0.0947 71.68)",
+          "oklch(72% 0.0947 71.68)",
+          "oklch(84% 0.0947 71.68)",
+          "oklch(95% 0.0947 71.68)"
+        ]
+      },
+      "overview-done": {
+        "role": "secondary",
+        "displayName": "Overview Done",
+        "tonalRamp": [
+          "oklch(15% 0.0856 152.79)",
+          "oklch(26% 0.0856 152.79)",
+          "oklch(38% 0.0856 152.79)",
+          "oklch(49% 0.0856 152.79)",
+          "oklch(61% 0.0856 152.79)",
+          "oklch(72% 0.0856 152.79)",
+          "oklch(84% 0.0856 152.79)",
+          "oklch(95% 0.0856 152.79)"
+        ]
+      },
+      "overview-problem-bg": {
+        "role": "secondary",
+        "displayName": "Overview Problem Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0166 26.65)",
+          "oklch(26% 0.0166 26.65)",
+          "oklch(38% 0.0166 26.65)",
+          "oklch(49% 0.0166 26.65)",
+          "oklch(61% 0.0166 26.65)",
+          "oklch(72% 0.0166 26.65)",
+          "oklch(84% 0.0166 26.65)",
+          "oklch(95% 0.0166 26.65)"
+        ]
+      },
+      "overview-waiting-bg": {
+        "role": "secondary",
+        "displayName": "Overview Waiting Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0281 86.64)",
+          "oklch(26% 0.0281 86.64)",
+          "oklch(38% 0.0281 86.64)",
+          "oklch(49% 0.0281 86.64)",
+          "oklch(61% 0.0281 86.64)",
+          "oklch(72% 0.0281 86.64)",
+          "oklch(84% 0.0281 86.64)",
+          "oklch(95% 0.0281 86.64)"
+        ]
+      },
+      "overview-done-bg": {
+        "role": "secondary",
+        "displayName": "Overview Done Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0160 148.41)",
+          "oklch(26% 0.0160 148.41)",
+          "oklch(38% 0.0160 148.41)",
+          "oklch(49% 0.0160 148.41)",
+          "oklch(61% 0.0160 148.41)",
+          "oklch(72% 0.0160 148.41)",
+          "oklch(84% 0.0160 148.41)",
+          "oklch(95% 0.0160 148.41)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page heading."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel heading."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Shared module record table text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Table headers and compact metadata."
+      },
+      "metric": {
+        "displayName": "Metric",
+        "purpose": "Ordinary Overview KPI quantity."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Shared control text."
+      },
+      "metric-priority": {
+        "displayName": "Metric Priority",
+        "purpose": "Pending QC and Unbilled amount emphasis."
+      },
+      "overview-title": {
+        "displayName": "Overview Title",
+        "purpose": "Compact Overview section title."
+      },
+      "overview-body": {
+        "displayName": "Overview Body",
+        "purpose": "Overview copy and dense operational table."
+      }
+    },
+    "shadows": [
+      {
+        "name": "control-xs",
+        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "purpose": "Shared outline buttons and fields."
+      },
+      {
+        "name": "dialog-lg",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "purpose": "Shared elevated dialog."
+      },
+      {
+        "name": "search-results",
+        "value": "0 5px 16px #112c341c",
+        "purpose": "Global search dropdown."
+      }
+    ],
+    "motion": [
+      {
+        "name": "dialog-duration",
+        "value": "200ms",
+        "purpose": "Dialog opacity and scale entry/exit."
+      },
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(.23,1,.32,1)",
+        "purpose": "Dialog content animation."
+      },
+      {
+        "name": "overview-state",
+        "value": "color 120ms ease-out, background-color 120ms ease-out",
+        "purpose": "Overview links and controls; removed for reduced motion."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "none",
+        "purpose": "Dialogs, saving spinner, and Overview transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile-max",
+        "value": "800px"
+      },
+      {
+        "name": "compact-max",
+        "value": "1180px"
+      },
+      {
+        "name": "wide-min",
+        "value": "1450px"
+      },
+      {
+        "name": "phone-max",
+        "value": "480px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Save or create a factory record.",
+      "html": "<button class=\"ds-primary\">New job order</button>",
+      "css": ".ds-primary{font-family:Manrope,sans-serif;font-size:14px;font-weight:500;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:color .15s,background-color .15s;height:36px;padding:8px 16px;border:0;background:var(--primary,#087f72);color:var(--primary-foreground,#fff)}.ds-primary:hover{background:color-mix(in srgb,var(--primary,#087f72) 90%,transparent)}.ds-primary:focus-visible{outline:3px solid var(--focus,#55b2a4);outline-offset:3px;}.ds-primary:disabled{opacity:.5;cursor:not-allowed}@media(max-width:800px){.ds-primary{min-height:44px}}"
+    },
+    {
+      "name": "Outline button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary record operation.",
+      "html": "<button class=\"ds-outline\">Export Excel</button>",
+      "css": ".ds-outline{font-family:Manrope,sans-serif;font-size:14px;font-weight:500;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:color .15s,background-color .15s;height:36px;padding:8px 16px;border:1px solid var(--border,#dce5e8);background:var(--background,#f6f8f9);color:var(--foreground,#18343c);box-shadow:0 1px 2px 0 rgb(0 0 0 / .05)}.ds-outline:hover{background:var(--accent,#e5f1ef)}.ds-outline:focus-visible{outline:3px solid var(--focus,#55b2a4);outline-offset:3px;}@media(max-width:800px){.ds-outline{min-height:44px}}"
+    },
+    {
+      "name": "Ghost row action",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Quiet action beside its record.",
+      "html": "<button class=\"ds-ghost\">Update rate</button>",
+      "css": ".ds-ghost{font-family:Manrope,sans-serif;font-size:14px;font-weight:500;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:color .15s,background-color .15s;height:32px;padding:8px 12px;border:0;background:transparent;color:var(--foreground,#18343c)}.ds-ghost:hover{background:var(--accent,#e5f1ef)}.ds-ghost:focus-visible{outline:3px solid var(--focus,#55b2a4);outline-offset:3px;}@media(max-width:800px){.ds-ghost{min-height:44px}}"
+    },
+    {
+      "name": "Entry input",
+      "kind": "input",
+      "refersTo": "input-entry",
+      "description": "Labeled entry field.",
+      "html": "<label class=\"ds-label\">Received quantity (pcs)<input class=\"ds-input\" type=\"number\" placeholder=\"Enter quantity\"></label>",
+      "css": ".ds-label{display:grid;gap:7px;font:600 12px Manrope,sans-serif;color:var(--foreground,#18343c)}.ds-input{height:40px;min-width:0;border:1px solid var(--border,#dce5e8);border-radius:6px;padding:4px 12px;background:transparent;color:var(--foreground,#18343c);font:400 13px Manrope,sans-serif;box-shadow:0 1px 2px 0 rgb(0 0 0 / .05)}.ds-input:focus-visible{border-color:var(--primary,#087f72);outline:3px solid var(--focus,#55b2a4);outline-offset:3px;}.ds-input::placeholder{color:var(--muted-foreground,#52696f)}.ds-input:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Available status",
+      "kind": "chip",
+      "refersTo": "chip-ok",
+      "description": "Text and color convey availability.",
+      "html": "<span class=\"ds-chip\">Available</span>",
+      "css": ".ds-chip{display:inline-flex;padding:2px 8px;border:1px solid transparent;border-radius:9999px;background:#e6f3ec;color:#256742;font:500 12px/16px Manrope,sans-serif}"
+    },
+    {
+      "name": "Work panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Bordered white operational container.",
+      "html": "<section class=\"ds-panel\"><h2 class=\"ds-panel-title\">The work on your floor</h2><p class=\"ds-panel-description\">4 active orders</p></section>",
+      "css": ".ds-panel{background:#fff;border:1px solid var(--border,#dce5e8);border-radius:10px;padding:20px 22px;color:var(--foreground,#18343c)}.ds-panel-title{margin:0;font:700 17px Manrope,sans-serif;letter-spacing:-.02em}.ds-panel-description{margin:5px 0 0;font:400 12px Manrope,sans-serif;color:var(--muted-foreground,#52696f)}"
+    },
+    {
+      "name": "Active module",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "Current desktop module and active marker.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link\" href=\"#overview\" aria-current=\"page\">Overview<span class=\"ds-marker\"></span></a></nav>",
+      "css": ".ds-nav{background:var(--workshop,#112c34);padding:18px;width:232px}.ds-nav-link{display:flex;align-items:center;gap:12px;padding:10px 12px;min-height:42px;border-radius:7px;color:#fff;background:#234952;text-decoration:none;font:500 13px Manrope,sans-serif}.ds-nav-link:hover{background:#1e3c44}.ds-nav-link:focus-visible{outline:3px solid var(--focus,#55b2a4);outline-offset:3px;}.ds-marker{margin-left:auto;width:6px;height:6px;border-radius:50%;background:#72d0ba}"
+    },
+    {
+      "name": "Overview priority KPI",
+      "kind": "card",
+      "refersTo": "overview-kpi-priority",
+      "description": "Neutral emphasis for Pending QC and Unbilled amount.",
+      "html": "<section class=\"ds-kpi\"><h2>Pending QC</h2><strong>800</strong><p>Pieces awaiting final inspection</p><a href=\"#quality\">Inspect</a></section>",
+      "css": ".ds-kpi{background:#FFFBEB;border:1px solid #f3dfb9;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px;font-family:Manrope,sans-serif;color:#B45309}.ds-kpi h2{margin:0;font-size:12px;font-weight:600}.ds-kpi strong{font-size:29px;line-height:1.3;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#B45309}.ds-kpi p{margin:0;font-size:11px;color:var(--muted-foreground,#52696f)}.ds-kpi a{font-size:11px;font-weight:600;color:var(--primary,#087f72);text-decoration:none}.ds-kpi a:hover{text-decoration:underline}.ds-kpi a:focus-visible{outline:3px solid #55b2a4;outline-offset:3px}@media(max-width:800px){.ds-kpi{padding:10px}.ds-kpi strong{font-size:23px}}"
+    },
+    {
+      "name": "Overview status",
+      "kind": "chip",
+      "description": "Plain rectangular due-order status.",
+      "html": "<span class=\"ds-overdue\">Overdue</span>",
+      "css": ".ds-overdue{display:inline-block;padding:3px 7px;border-radius:4px;font:400 11px Manrope,sans-serif;white-space:nowrap;background:#fbecea;color:#a52d28}"
+    },
+    {
+      "name": "Global search",
+      "kind": "input",
+      "description": "Text-only job, customer, and product search.",
+      "html": "<input class=\"ds-global\" aria-label=\"Search job orders, customers, and products\" placeholder=\"Search jobs, customers, products…\">",
+      "css": ".ds-global{height:36px;width:100%;min-width:0;padding:4px 46px 4px 12px;border:1px solid var(--border,#dce5e8);border-radius:6px;background:#f8fafb;color:var(--foreground,#18343c);font:400 12px Manrope,sans-serif;box-shadow:0 1px 2px 0 rgb(0 0 0 / .05)}.ds-global::placeholder{color:var(--muted-foreground,#52696f)}.ds-global:focus-visible{border-color:var(--primary,#087f72);outline:3px solid #55b2a4;outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Practical factory workspace",
+    "overview": "Assemble Electrix is practical, dense factory software. The dark industrial navy sidebar and teal actions remain, while Overview is a plain working register: real attention alerts first, unequal KPIs second, due orders next, then material conversion and recent operational activity.\n\nThe user explicitly replaced the former showcase dashboard. Overview uses text controls, compact sections, and quantities with clear units; no pictogram icons appear outside its sidebar. Other modules retain their established bordered panels, shadcn controls, and BOM workflows. The company identity uses the supplied AE SVG mark on the shell and statements, with a matching favicon.",
+    "keyCharacteristics": [
+      "Attention before totals; due work before summaries.",
+      "Neutral unequal Overview KPIs emphasize Pending QC and Unbilled amount.",
+      "Text-only Overview, compact bordered work surfaces, and tabular quantities.",
+      "Explicit component/product units, record mode, and unknown history.",
+      "Aligned three-column attention rows with severity markers; Actual-only backup status and outlined header actions."
+    ],
+    "rules": [
+      {
+        "name": "The Action Color Rule",
+        "body": "Use teal for actionable controls, links, and production progress; Overview KPI emphasis comes from neutral surface and size, with semantic color only for relevant states.",
+        "section": "colors"
+      },
+      {
+        "name": "The Quantity Rule",
+        "body": "Use tabular numerals and right alignment for comparable quantities, rates, and charges; name component pieces separately from product pieces.",
+        "section": "typography"
+      },
+      {
+        "name": "The Quiet Surface Rule",
+        "body": "Separate resting work surfaces with borders and tone; reserve strong elevation for dialogs and restrained elevation for search results.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do show real attention alerts before Overview KPIs.",
+      "Do keep current module, date, shift, and record mode explicit.",
+      "Do put the next valid action beside the record it changes.",
+      "Do preserve contained horizontal table scrolling and visible keyboard focus.",
+      "Do label demo records on statements and exported workbooks.",
+      "Do keep customer billing rates and worker wages visibly separate.",
+      "Do leave missing shift, operator, and backup history visibly unknown."
+    ],
+    "donts": [
+      "Don't add icons outside the sidebar on Overview.",
+      "Don't restore the promotional sidebar tagline or factory pitch.",
+      "Don't use equal colorful KPI cards, decorative revenue charts, or marketing hero layouts on Overview.",
+      "Don't imply an initiated backup download proves the file was saved.",
+      "Don't conceal validation, shortage, loading, or storage-error feedback."
+    ]
+  }
+}
