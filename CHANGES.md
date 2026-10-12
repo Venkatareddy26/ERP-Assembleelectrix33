@@ -1,5 +1,14 @@
 # Assemble Electrix — changes and verification
 
+## Hosted records fix
+
+- Vercel previously published the frontend without `/api/workspace`, so every module showed “Records could not load.”
+- Added an explicit hosted build with the imported BOM and IndexedDB storage. Local development and production builds retain the original SQLite API.
+- Reused the existing domain validation and Excel workbook implementation in the browser. Actual starts empty; only Demo receives sample records.
+- Browser writes commit atomically and reject stale revisions across tabs. Storage failures and damaged records do not silently reset existing data.
+- JSON backups retain the existing full-workspace format, localStorage preferences are preserved, and hosted copy clearly says records save in this browser on this device.
+- Files: `src/lib/browser-store.mjs` and declarations, `src/lib/workspace-client.ts`, `src/vite-env.d.ts`, `src/App.tsx`, `server/domain.mjs`, `server/export.mjs` and declarations, `vite.config.ts`, `vercel.json`, package manifests, browser-store tests, and documentation.
+
 ## Overview
 
 - Plain Overview heading with the current India date and an editable current shift.

@@ -90,5 +90,5 @@ export async function buildWorkbook(workspace, section, options = {}) {
     ws.pageSetup.printTitlesRow = '1:5';
     ws.headerFooter.oddFooter = 'Assemble Electrix | &P of &N';
   }
-  return Buffer.from(await workbook.xlsx.writeBuffer());
+  return workbook.xlsx.writeBuffer();
 }

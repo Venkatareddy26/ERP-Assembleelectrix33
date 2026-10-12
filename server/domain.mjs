@@ -1,7 +1,6 @@
-import { randomUUID } from 'node:crypto';
 export const emptyState = () => ({revision:0,customers:[],rates:[],workers:[],inwards:[],orders:[],production:[],dispatches:[],invoices:[],audit:[]});
 const fail = message => {throw new Error(message);};
-const id = () => randomUUID();
+const id = () => globalThis.crypto.randomUUID();
 export const today = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 function text(value,label){if(typeof value!=='string'||!value.trim()||value.length>250)fail(`${label} is required (up to 250 characters).`);return value.trim();}
 function qty(value,label='Quantity'){const n=Number(value);if(!Number.isSafeInteger(n)||n<=0||n>10000000)fail(`${label} must be a whole number between 1 and 10,000,000.`);return n;}
