@@ -1,5 +1,15 @@
 # Assemble Electrix — changes and verification
 
+## Phone layout below 640px
+
+- Added a compact 56px header, an accessible More sheet for workspace/search/backup controls, and Overview/Production/QC/Dispatch/More bottom tabs.
+- Reused the existing register rows and action handlers in stacked cards with readable labels, status pills, and full-width row actions. Core tables and rejection notes stay within the phone viewport.
+- Kept job references unbroken and customer names at normal word boundaries. Pointer-selected native selects release focus; keyboard users retain a visible focus indicator.
+- Stacked mobile alerts and combined due-soon/at-risk orders with due dates. Desktop alert rows and all calculations remain unchanged.
+- Made the BOM list a normal page list with tap-to-open detail, a Products return button, and a secondary phone export control.
+- Scoped layout rules to screens below 640px. Desktop Overview measurements match the original. Backend, persistence, backup format, wage, stock, QC and billing rules are unchanged.
+- Files: `src/mobile.css`, `src/components/mobile-navigation.tsx`, `src/components/record-table.tsx`, `src/lib/mobile-select-focus.ts`, `src/App.tsx`, `src/components/overview.tsx`, `src/components/global-search.tsx`, `src/main.tsx`, and design documentation.
+
 ## Hosted records fix
 
 - Vercel previously published the frontend without `/api/workspace`, so every module showed “Records could not load.”
@@ -63,3 +73,11 @@ Compiled dist files were regenerated. Source BOM and operational database conten
 Changed src/components/overview.tsx, src/overview.css, and src/App.tsx. Attention rows align title/detail/action columns, red issues precede amber reminders, and stock expansion supports the keyboard. Rejections are shown once. Cards use tighter insets and short actions. Header Refresh/Backup are outlined controls; the sidebar uses a small Download link and backup status appears only in Actual mode. Design documentation is updated. No calculation, database, or preference storage logic changed.
 
 Final small polish changes the same three UI files: all KPI cards have equal-height structure and an action; alerts use verb/arrow links; Pending QC and Unbilled use #B45309 / #FFFBEB; Shift is a compact button; the Actual-only sidebar link reads Backup. Empty Actual messages were verified. No logic or data files changed.
+
+## Mobile More sheet correction
+
+- Removed centered-dialog translate offsets from More and anchored the sheet to both viewport edges and the bottom.
+- Added one-column module/data lists, visible workspace labeling, full-width 44px data controls, and vertical-only motion.
+- Browser Back, module taps, and backdrop taps dismiss the sheet; body scroll stays locked while open.
+- Red mobile At risk pills, 11px tab labels, and landscape phone support.
+- Verified all six requested viewports, all six module links and four data controls; desktop centered dialogs, workflow calculations, and saved records are unchanged.

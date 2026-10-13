@@ -62,6 +62,8 @@ The nine requested design/testing skills are installed under your Codex skills f
 
 ## Overview
 
+Below 640px, the app uses a compact page header and bottom tabs. More contains the other modules, workspace switcher, search, Refresh, Backup, Restore backup, and shift settings. Registers become labeled cards with their existing row actions; the BOM product list opens a separate detail view on tap. Desktop layout and saved data rules remain unchanged.
+
 Overview prioritizes outstanding orders due within 3 days (including overdue), orders at risk at their current production pace, customer material shortages against remaining production, QC entries older than 24 hours, today’s QC rejects, and unbilled dispatches. Stock requirements exclude accepted and pending pieces already produced. The flow labels component and product units separately; QC yield uses inspected pieces only.
 
 The At risk pill is a display-only forecast shared by Job orders and Overview > Needs attention. It compares the quantity left to produce with recent usable output per calendar day over the last seven days, or since first production for newer orders. Idle days reduce pace; known rejects do not count as usable output. Accepted pieces and pieces awaiting QC count toward the target. Days remaining include the due date; an unfinished order without recorded pace is at risk. The forecast does not infer shift capacity or change saved records. Production lists pending inspections first, keeping newest entries first within each inspection group.
