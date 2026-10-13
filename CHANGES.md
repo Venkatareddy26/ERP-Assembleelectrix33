@@ -1,5 +1,12 @@
 # Assemble Electrix — changes and verification
 
+## Final mobile checks
+
+- Removed constant Unbilled and Billed pills from mobile billing cards; amounts and actions are unchanged.
+- Applied 16px plus safe-area padding to both sheet containers, with internal scrolling capped at 85dvh.
+- Verified 360, 375, 412 and 440px layouts: no horizontal overflow, aligned production/QC quantities and dispatch product/ready rows. Short-screen Data controls scroll above the bottom inset.
+- Close, backdrop, module tap and browser Back each release body pointer and scroll locks; page taps and touch scrolling work afterward. Shift opens existing settings from Data below Workspace.
+
 ## Reachable mobile sheets
 
 - More contains only the six secondary modules. Data retains search and workspace actions, with a labeled Shift control below Workspace.
