@@ -1,6 +1,6 @@
 import { emptyState, execute, seedDemo } from '../../server/domain.mjs';
+import { isReadableState, loadErrorMessage, restoredState, validateBackup } from '../../server/backup.mjs';
 
-const collections = ['customers', 'rates', 'workers', 'inwards', 'orders', 'production', 'dispatches', 'invoices', 'audit'];
 const unavailable = () => new Error('Browser storage is unavailable. Allow this site to save data, then try again.');
 const storageError = error => error?.name === 'QuotaExceededError'
   ? new Error('Browser storage is full. This entry was not saved. Download a backup before freeing browser space.')
@@ -31,13 +31,13 @@ export function createBrowserStore({ bom, indexedDBFactory = globalThis.indexedD
   function readState(saved, mode) {
     if (saved === undefined) return mode === 'demo' ? seedDemo(bom) : emptyState();
     const state = saved?.state;
-    if (saved?.schemaVersion !== 1 || !Number.isSafeInteger(state?.revision) || state.revision < 0 || collections.some(key => !Array.isArray(state[key]))) {
-      throw new Error('Saved browser records could not be read. They have been kept unchanged. Contact support before clearing site data.');
+    if (saved?.schemaVersion !== 1 || !isReadableState(state)) {
+      throw new Error(loadErrorMessage);
     }
     return state;
   }
 
-  async function transaction(mode, change) {
+  async function transaction(mode, change, recovery = false) {
     if (!['demo', 'actual'].includes(mode)) throw new Error('Choose a valid record workspace.');
     const database = await openDatabase();
     return new Promise((resolve, reject) => {
@@ -47,7 +47,7 @@ export function createBrowserStore({ bom, indexedDBFactory = globalThis.indexedD
       const request = store.get(mode);
       request.onsuccess = () => {
         try {
-          const state = readState(request.result, mode);
+          const state = recovery ? (request.result?.schemaVersion === 1 ? request.result.state : undefined) : readState(request.result, mode);
           result = change ? change(state) : { mode, bom, state };
           if (change || request.result === undefined) store.put({ schemaVersion: 1, state: result.state }, mode);
         } catch (error) {
@@ -66,5 +66,9 @@ export function createBrowserStore({ bom, indexedDBFactory = globalThis.indexedD
       if (revision !== state.revision) throw new Error('Records changed in another window. Close this form, refresh, and try again.');
       return execute(state, bom, action, input);
     }),
+    restore: (mode, backup, revision) => {
+      const validated = validateBackup(backup, mode, bom);
+      return transaction(mode, state => ({ mode, bom, state: restoredState(validated, state, revision) }), true);
+    },
   };
 }

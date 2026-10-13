@@ -1,9 +1,48 @@
-import type { Workspace, Order } from '../types';
+import type { Workspace, Order, State } from '../types';
 
 export const indiaDate = (value: Date | string) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(value));
 export const addDays = (date: string, days: number) => new Date(Date.parse(`${date}T12:00:00Z`) + days * 86400000).toISOString().slice(0, 10);
 export type OrderSummary = { produced: number; accepted: number; rejected: number; pending: number; dispatched: number; billed: number };
 export type StockShortage = { customerId: string; materialId: string; customer: string; material: string; available: number; required: number; shortfall: number };
+export type OrderRisk = { atRisk: boolean; remaining: number; dailyPace: number; daysLeft: number; sampleDays: number; projectedCapacity: number };
+
+const calendarDays = (from: string, to: string) => Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86400000);
+
+/** A display-only forecast: recent usable output per calendar day, including idle days. */
+export function buildOrderRisks(state: State, now = new Date()): Map<string, OrderRisk> {
+  const date = indiaDate(now), windowStart = addDays(date, -6);
+  const output = new Map<string, { accepted: number; pending: number; recent: number; firstDate?: string }>();
+  for (const entry of state.production) {
+    const totals = output.get(entry.orderId) ?? { accepted: 0, pending: 0, recent: 0 };
+    totals.accepted += entry.accepted;
+    if (!entry.inspected) totals.pending += entry.quantity;
+    // Future-dated entries retain their existing quantity totals but cannot establish today's pace.
+    if (entry.date <= date) {
+      if (!totals.firstDate || entry.date < totals.firstDate) totals.firstDate = entry.date;
+      if (entry.date >= windowStart) totals.recent += entry.inspected ? entry.accepted : entry.quantity;
+    }
+    output.set(entry.orderId, totals);
+  }
+  const dispatched = new Map<string, number>();
+  for (const entry of state.dispatches) dispatched.set(entry.orderId, (dispatched.get(entry.orderId) ?? 0) + entry.quantity);
+  return new Map(state.orders.map(order => {
+    const totals = output.get(order.id);
+    const remaining = Math.max(0, order.quantity - (totals?.accepted ?? 0) - (totals?.pending ?? 0));
+    const sampleStart = totals?.firstDate && totals.firstDate > windowStart ? totals.firstDate : windowStart;
+    const sampleDays = totals?.firstDate ? calendarDays(sampleStart, date) + 1 : 0;
+    const dailyPace = sampleDays ? (totals?.recent ?? 0) / sampleDays : 0;
+    const daysLeft = Math.max(0, calendarDays(date, order.due) + 1);
+    const projectedCapacity = dailyPace * daysLeft;
+    const atRisk = remaining > 0 && (dispatched.get(order.id) ?? 0) < order.quantity && remaining > projectedCapacity;
+    return [order.id, { atRisk, remaining, dailyPace, daysLeft, sampleDays, projectedCapacity }];
+  }));
+}
+
+export function orderRiskDescription(risk: OrderRisk) {
+  const count = (n: number) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 }).format(n);
+  const pace = risk.sampleDays ? `${count(risk.dailyPace)} usable pcs/day over the last ${risk.sampleDays} calendar ${risk.sampleDays === 1 ? 'day' : 'days'}, including idle days` : 'No production pace recorded';
+  return `${count(risk.remaining)} pcs left to produce. ${pace}. ${risk.daysLeft} production ${risk.daysLeft === 1 ? 'day' : 'days'} through the due date. Accepted pieces and pieces awaiting QC count toward completion; known rejects do not.`;
+}
 
 export function buildOverview(w: Workspace, now = new Date()) {
   const { state: s, bom } = w;
@@ -33,6 +72,8 @@ export function buildOverview(w: Workspace, now = new Date()) {
   const outstanding = s.orders.filter(o => orderTotals.get(o.id)!.dispatched < o.quantity);
   const dueOrders = outstanding.filter(o => o.due <= cutoff).sort((a, b) => a.due.localeCompare(b.due) || a.number.localeCompare(b.number));
   const overdue = dueOrders.filter(o => o.due < date), dueSoon = dueOrders.filter(o => o.due >= date);
+  const orderRisks = buildOrderRisks(s, now);
+  const atRiskOrders = s.orders.filter(o => orderRisks.get(o.id)?.atRisk).sort((a, b) => a.due.localeCompare(b.due) || a.number.localeCompare(b.number));
   const linesByProduct = new Map<string, typeof bom.lines>();
   for (const line of bom.lines) { const rows = linesByProduct.get(line.productId) ?? []; rows.push(line); linesByProduct.set(line.productId, rows); }
   const requirements = new Map<string, { customerId: string; materialId: string; required: number }>();
@@ -61,7 +102,7 @@ export function buildOverview(w: Workspace, now = new Date()) {
     const customerId = record && 'customerId' in record ? record.customerId : order?.customerId;
     return { ...a, quantity: record?.quantity, order: order?.number, customer: customerId ? customers.get(customerId) : undefined, reference: record && 'challan' in record ? record.challan : record && 'number' in record ? record.number : order?.number };
   });
-  return { date, cutoff, customers, products, orderTotals, total, outstanding, dueOrders, overdue, dueSoon, shortages, producedToday, rejectedToday, oldQcPieces, oldQcEntries, unbilledOrders, unbilledPaise, ready: total.accepted - total.dispatched, receivedComponents: s.inwards.reduce((n, i) => n + i.quantity, 0), activity, status };
+  return { date, cutoff, customers, products, orderTotals, orderRisks, atRiskOrders, total, outstanding, dueOrders, overdue, dueSoon, shortages, producedToday, rejectedToday, oldQcPieces, oldQcEntries, unbilledOrders, unbilledPaise, ready: total.accepted - total.dispatched, receivedComponents: s.inwards.reduce((n, i) => n + i.quantity, 0), activity, status };
 }
 
 export function backupAge(timestamp: string | undefined, now = new Date()) {

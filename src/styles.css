@@ -20,3 +20,15 @@ input::placeholder{color:var(--muted-foreground);opacity:1}.table-wrap:focus-vis
 @media(max-width:480px){.content{padding:16px}.bill-heading{flex-wrap:wrap}.statement-brand{gap:8px}.statement-brand>svg{width:32px;height:32px}.bill-heading h2{font-size:18px}.plan-controls{grid-template-columns:minmax(0,1fr)}.pagination{padding:12px}.page-title .actions>button{min-width:140px}.metric{padding:16px}.metric-value{font-size:23px}.metric-head{font-size:11px;gap:6px}.form-controls>button{flex:1}.notice{padding:10px 12px}.filter-select{max-width:100%;width:100%}}
 @media(prefers-reduced-motion:reduce){[data-slot=dialog-overlay],[data-slot=dialog-content],.saving-spinner{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
 @media print{body>*{display:none!important}body .bill-print{display:block!important;background:white;padding:30px;color:black}.bill-print .data-table{font-size:12px}.bill-print .bill-total{margin-top:30px}}
+
+/* Keep the register in focus, with one clear action and a compact workspace bar. */
+.top-actions{margin-left:auto;flex-wrap:wrap}
+.notice.demo{min-height:32px;padding:4px 12px;flex-wrap:nowrap;align-items:center;gap:12px;font-size:11px;line-height:20px}
+.notice.demo>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notice.demo>button{flex-shrink:0;min-height:24px;padding:0;white-space:nowrap;text-align:center}
+.order-statuses{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.restore-summary{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 16px;margin:0;padding:16px;background:var(--muted);border-radius:6px;font-size:12px;line-height:1.6}
+.restore-summary dt{color:var(--muted-foreground)}
+.restore-summary dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.restore-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+@media(max-width:800px){.top-actions .mode-control{flex-basis:100%}.top-actions>button{flex:1}.notice.demo{padding:4px 10px}.notice.demo>button{min-height:28px}.restore-actions>button{flex:1}}
