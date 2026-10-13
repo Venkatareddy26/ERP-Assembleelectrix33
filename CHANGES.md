@@ -1,5 +1,14 @@
 # Assemble Electrix — changes and verification
 
+## Billing-style manufacturing interface
+
+- Applied a Vyapar-inspired billing-software direction across all ten modules: light navigation grouped into Manufacturing and Records & billing, red primary actions, compact white registers and neutral surfaces.
+- Added read-only module summaries from existing records. Empty actual workspaces show helpful messages; the imported product catalogue stays real in both modes.
+- Updated the AE mark, favicon and wordmark to match the action colour. Bill statements, entry forms, filters, pagination and exports retain their existing handlers and values.
+- Preserved mobile cards, bottom tabs and the independently scrolling More/Data sheets. Mobile summaries are compact, and BOM detail hides the catalogue summary.
+- Verified all ten modules at desktop, tablet, phone and landscape sizes, plus entry dialogs, QC/dispatch actions, bill preview, Excel export, BOM planning and empty Actual records. All 33 tests and both builds passed.
+- Source changes: `src/factory-design.css`, `src/components/workspace-navigation.tsx`, `src/components/module-summary.tsx`, `src/App.tsx`, `src/main.tsx`, `src/components/brand-mark.tsx`, `public/assemble-electrix-mark.svg`, `public/assemble-electrix-logo.svg` and `index.html`.
+
 ## Final mobile checks
 
 - Removed constant Unbilled and Billed pills from mobile billing cards; amounts and actions are unchanged.
