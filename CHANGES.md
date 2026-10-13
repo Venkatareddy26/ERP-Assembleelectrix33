@@ -1,5 +1,13 @@
 # Assemble Electrix — changes and verification
 
+## Reachable mobile sheets
+
+- More contains only the six secondary modules. Data retains search and workspace actions, with a labeled Shift control below Workspace.
+- Both sheets use a fixed header and a flexing body that scrolls independently within 85dvh, with 16px plus safe-area padding beneath the last control.
+- Sheet dismissal unmounts the modal so Radix releases its page locks. Close, backdrop, navigation and browser Back were checked for normal page scrolling and taps afterward.
+- Browser checks passed at 320×568, 360×640, 375×667, 440×956 and 844×390; landscape touch gestures scroll both sheet bodies. All 33 tests and local/hosted builds passed.
+- Files: `src/components/mobile-navigation.tsx`, `src/mobile.css` and this change log. Desktop styles and record handling are unchanged.
+
 ## Phone layout below 640px
 
 - Added a compact 56px header, an accessible More sheet for workspace/search/backup controls, and Overview/Production/QC/Dispatch/More bottom tabs.

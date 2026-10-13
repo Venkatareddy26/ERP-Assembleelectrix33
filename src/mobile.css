@@ -25,11 +25,13 @@
   .mobile-tabs>a,.mobile-tabs>button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:56px;padding:4px 1px;border:0;border-radius:6px;font:inherit;font-size:11px;font-weight:600;color:var(--muted-foreground);background:transparent}
   .mobile-tabs svg{width:20px;height:20px}
   .mobile-tabs .active{background:var(--accent);color:var(--primary)}
-  [data-slot=dialog-content].mobile-more-sheet{display:grid;top:auto;bottom:0;left:0;right:0;translate:none;transform:translateY(0);width:100%;max-width:none;max-height:85dvh;border-radius:8px 8px 0 0;padding:16px 16px 0;padding-bottom:env(safe-area-inset-bottom);overflow-y:auto;overscroll-behavior:contain;min-width:0;gap:16px}
+  [data-slot=dialog-content].mobile-more-sheet{display:flex;flex-direction:column;top:auto;bottom:0;left:0;right:0;translate:none;transform:translateY(0);width:100%;max-width:none;max-height:85dvh;border-radius:8px 8px 0 0;padding:0;overflow:hidden;min-width:0;gap:0}
+  .mobile-sheet-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;padding:0 16px calc(16px + env(safe-area-inset-bottom))}
 
   .mobile-more-sheet>*,.mobile-more-modules>*,.mobile-more-modules a>span,.mobile-workspace-controls>*,.mobile-data-actions>*{min-width:0}
-  .mobile-more-sheet [data-slot=dialog-header]{flex-shrink:0}
-  .mobile-workspace-controls{margin-bottom:16px}
+  .mobile-more-sheet [data-slot=dialog-header]{flex-shrink:0;padding:16px 64px 16px 16px;min-height:76px}
+  .mobile-more-sheet [data-slot=dialog-close]{top:8px;right:8px}
+  .mobile-workspace-controls{margin-bottom:0}
   .mobile-more-modules a{width:100%}
   .mobile-more-sheet[data-state=open]{animation:mobile-sheet-in 200ms var(--ease-out) both}
   .mobile-more-sheet[data-state=closed]{animation:mobile-sheet-out 160ms var(--ease-out) both}
@@ -48,7 +50,7 @@
   .mobile-data-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
   .mobile-data-actions>button{width:100%;min-height:44px;white-space:normal}
   .mobile-backup-note{font-size:12px;color:var(--muted-foreground)}
-  .mobile-shift-button{justify-content:space-between}
+  .mobile-shift-button{width:100%;justify-content:space-between}
   button,[data-slot=button],select,input:not([type=hidden]),.search-clear,.global-search-clear,[data-slot=dialog-close]{min-height:44px}
   [data-slot=dialog-close],.search-clear{min-width:44px}
   select:focus:not(:focus-visible){outline:0;box-shadow:none}
