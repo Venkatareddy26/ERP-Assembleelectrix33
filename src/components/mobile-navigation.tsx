@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
-import { LayoutDashboard, Factory, ShieldCheck, Truck, Menu, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Factory, ShieldCheck, Truck, Menu, Ellipsis, type LucideIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { BrandMark } from './brand-mark';
@@ -35,6 +35,7 @@ export function MobileNavigation({ modules, section, title, mode, workspace, loa
   settings: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [sheet, setSheet] = useState<'modules' | 'data'>('modules');
   const trigger = useRef<HTMLButtonElement | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const returnFocus = useRef(true);
@@ -50,12 +51,13 @@ export function MobileNavigation({ modules, section, title, mode, workspace, loa
       history.back();
     } else action?.();
   };
-  const showMenu = (event: MouseEvent<HTMLButtonElement>) => {
+  const showMenu = (event: MouseEvent<HTMLButtonElement>, target: 'modules' | 'data') => {
     if (open || closing.current) return;
     trigger.current = event.currentTarget;
     returnFocus.current = true;
     history.pushState({ ...history.state, mobileMore: true }, '', location.href);
     menuHistory.current = true;
+    setSheet(target);
     setOpen(true);
   };
   useEffect(() => { setOpen(false); }, [section]);
@@ -83,19 +85,21 @@ export function MobileNavigation({ modules, section, title, mode, workspace, loa
     <header className="mobile-header">
       <a href="#overview" aria-label="Assemble Electrix overview"><BrandMark /></a>
       <h1>{title}</h1>
-      <Button variant="ghost" size="icon" aria-label="Open More menu" aria-haspopup="dialog" aria-expanded={open} onClick={showMenu}><Menu /></Button>
+      <Button variant="ghost" size="icon" aria-label="Open Data actions" aria-haspopup="dialog" aria-expanded={open && sheet === 'data'} onClick={event => showMenu(event, 'data')}><Ellipsis /></Button>
     </header>
     <nav className="mobile-tabs" aria-label="Mobile navigation">
       {tabs.map(tab => <a key={tab.id} href={`#${tab.id}`} className={section === tab.id ? 'active' : ''} aria-current={section === tab.id ? 'page' : undefined} onClick={() => navigate(tab.id)}><tab.icon aria-hidden="true" /><span>{tab.name}</span></a>)}
-      <button className={!tabs.some(tab => tab.id === section) ? 'active' : ''} aria-label="More modules and workspace controls" aria-haspopup="dialog" aria-expanded={open} onClick={showMenu}><Menu aria-hidden="true" /><span>More</span></button>
+      <button className={!tabs.some(tab => tab.id === section) ? 'active' : ''} aria-label="More modules" aria-haspopup="dialog" aria-expanded={open && sheet === 'modules'} onClick={event => showMenu(event, 'modules')}><Menu aria-hidden="true" /><span>More</span></button>
     </nav>
     <Dialog open={open} onOpenChange={next => { if (!next) dismiss(); }}>
       <DialogContent placement="bottom" className="mobile-more-sheet" onOpenAutoFocus={event => { event.preventDefault(); heading.current?.focus({ preventScroll: true }); }} onCloseAutoFocus={event => { event.preventDefault(); if (returnFocus.current) trigger.current?.focus({ preventScroll: true }); }}>
-        <DialogHeader><DialogTitle ref={heading} tabIndex={-1}>More</DialogTitle><DialogDescription>{date} · Assemble Electrix</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle ref={heading} tabIndex={-1}>{sheet === 'data' ? 'Data' : 'More'}</DialogTitle><DialogDescription>{date} · Assemble Electrix</DialogDescription></DialogHeader>
+        {sheet === 'modules' && <>
         <GlobalSearch key={mode} id="mobile-search-results" w={workspace} select={(target, term, productId) => closeThen(() => { selectSearch(target, term, productId); location.hash = target; })} />
         <nav className="mobile-more-modules" aria-label="More modules">{modules.filter(module => !tabs.some(tab => tab.id === module.id)).map(module => <a key={module.id} href={`#${module.id}`} aria-current={section === module.id ? 'page' : undefined} onClick={event => { event.preventDefault(); closeThen(() => { navigate(module.id); location.hash = module.id; }); }}><module.icon aria-hidden="true" /><span>{module.name}</span></a>)}</nav>
-        <div className="mobile-workspace-controls">
-          <h2>Data</h2>
+        <Button variant="outline" className="mobile-shift-button" onClick={() => closeThen(settings)}>Shift: {shift || 'Not set'}</Button>
+        </>}
+        {sheet === 'data' && <div className="mobile-workspace-controls">
           <Field><FieldLabel htmlFor="mobile-workspace">Workspace</FieldLabel><select id="mobile-workspace" aria-label="Choose record workspace" value={mode} disabled={restoring} onChange={event => changeMode(event.target.value as 'demo' | 'actual')}><option value="demo">Demo workspace</option><option value="actual">Your actual records</option></select></Field>
           <div className="mobile-data-actions">
             <Button variant="outline" disabled={loading || restoring} onClick={refresh}>Refresh</Button>
@@ -103,8 +107,7 @@ export function MobileNavigation({ modules, section, title, mode, workspace, loa
             <Button variant="outline" disabled={preparingRestore || restoring} onClick={() => closeThen(restore)}>{preparingRestore ? 'Checking backup…' : 'Restore backup'}</Button>
           </div>
           {mode === 'actual' && <p className="mobile-backup-note">Last backup: {backupText}</p>}
-          <Button variant="outline" className="mobile-shift-button" onClick={() => closeThen(settings)}>Shift: {shift || 'Not set'}</Button>
-        </div>
+        </div>}
       </DialogContent>
     </Dialog>
   </>;

@@ -81,3 +81,11 @@ Final small polish changes the same three UI files: all KPI cards have equal-hei
 - Browser Back, module taps, and backdrop taps dismiss the sheet; body scroll stays locked while open.
 - Red mobile At risk pills, 11px tab labels, and landscape phone support.
 - Verified all six requested viewports, all six module links and four data controls; desktop centered dialogs, workflow calculations, and saved records are unchanged.
+
+## Remaining mobile polish
+
+- Compact Production/QC quantity rows and Dispatch product/ready rows, with product names and full rejection notes.
+- Search-adjacent accessible Export Excel icon; header ellipsis for Data, bottom More for modules.
+- Full-card Overview KPI links and operating-rule-only mobile subtitles.
+- Keyboard-only focus rings on tabs and card links.
+- Verified all pages at 360, 375 and 440px without overflow. Desktop, calculations and saved records are unchanged.
