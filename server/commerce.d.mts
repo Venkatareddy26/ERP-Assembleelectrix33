@@ -1,0 +1,12 @@
+import type { State, BusinessRecord } from '../src/types';
+export const businessKinds: string[];
+export const documentKinds: string[];
+export function businessRows(state: State): BusinessRecord[];
+export function cashBalance(state: State): number;
+export function ownedStock(state: State, itemId: string): number;
+export function businessDue(state: State, record: BusinessRecord): number;
+export function loanTotal(record: BusinessRecord): number;
+export function loanSchedule(record: Pick<BusinessRecord,'amountPaise'|'data'>): {month:number;amount:number;interest:number;principal:number;balance:number}[];
+export function loanPrincipalPaid(record: BusinessRecord, paid: number): number;
+export function createBusinessRecord(state: State, input: Record<string, unknown>, id?: string, createdAt?: string): BusinessRecord;
+export function validateBusinessRecords(state: State): boolean;

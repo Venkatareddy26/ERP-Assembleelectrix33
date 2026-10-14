@@ -37,7 +37,7 @@ const server=http.createServer(async(req,res)=>{
    if(req.method==='POST'&&['/api/action','/api/restore'].includes(url.pathname)){
     const origin=req.headers.origin;if(origin&&!/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)){send(res,403,{error:'Origin not allowed.'});return;}
     if(!req.headers['content-type']?.startsWith('application/json')){send(res,415,{error:'Send JSON data.'});return;}
-    const limit=url.pathname==='/api/restore'?50*1024*1024:65536;
+    const limit=url.pathname==='/api/restore'?50*1024*1024:2*1024*1024;
     let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>limit){send(res,413,{error:'Request is too large.'});return;}}
     const request=JSON.parse(raw);
     if(url.pathname==='/api/restore'){

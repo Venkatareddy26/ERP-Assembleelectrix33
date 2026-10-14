@@ -1,3 +1,4 @@
+import { validateBusinessRecords } from './commerce.mjs';
 export const recordCollections = ['customers', 'rates', 'workers', 'inwards', 'orders', 'production', 'dispatches', 'invoices', 'audit'];
 export const loadErrorMessage = "Couldn't read saved records in this browser. Try again or restore a backup.";
 export const staleRestoreMessage = 'Records changed after the backup was selected. Refresh, then select the backup again.';
@@ -16,15 +17,19 @@ const requireValid = condition => { if (!condition) invalid(); };
 // reference and ledger balance before any saved workspace can be replaced.
 export function validateBackup(backup, mode, bom) {
   requireValid(object(backup));
-  if (backup.schemaVersion !== 1) throw new Error('This backup version is not supported. Saved records were not changed.');
+  if (![1, 2, 3].includes(backup.schemaVersion)) throw new Error('This backup version is not supported. Saved records were not changed.');
   if (!['demo', 'actual'].includes(mode) || !['demo', 'actual'].includes(backup.mode)) invalid();
   if (backup.mode !== mode) throw new Error(`This backup contains ${backup.mode === 'demo' ? 'demo' : 'actual'} records. Switch to that workspace before restoring it.`);
   if (canonical(backup.bom) !== canonical(bom)) throw new Error('This backup uses a different Products & BOM list. Saved records were not changed.');
   requireValid(timestamp(backup.exportedAt));
   const state = backup.state;
+  requireValid(!state?.businessRecords?.length || backup.schemaVersion === 3);
+  requireValid((backup.schemaVersion !== 3 || Array.isArray(state?.businessRecords)) && validateBusinessRecords(state || {}));
   requireValid(object(state) && integer(state.revision) && recordCollections.every(key => Array.isArray(state[key])));
+  const extensions = ['materialMoves', 'payments'];
+  requireValid(extensions.every(key => state[key] === undefined ? backup.schemaVersion === 1 : Array.isArray(state[key])));
   const ids = {};
-  for (const key of recordCollections) {
+  for (const key of [...recordCollections, ...extensions.filter(key => state[key] !== undefined)]) {
     ids[key] = new Set();
     for (const row of state[key]) {
       requireValid(object(row) && string(row.id) && !ids[key].has(row.id) && (row.createdAt === undefined || timestamp(row.createdAt)));
@@ -60,6 +65,13 @@ export function validateBackup(backup, mode, bom) {
     const key = balance(row.customerId, row.materialId);
     balances.set(key, (balances.get(key) ?? 0) + row.quantity);
   }
+  for (const row of state.materialMoves ?? []) {
+    requireValid(string(row.number) && ids.customers.has(row.customerId) && materials.has(row.materialId) && ['return', 'adjustment-in', 'adjustment-out'].includes(row.type) && quantity(row.quantity) && string(row.reference) && string(row.note) && date(row.date) && timestamp(row.createdAt));
+    unique(`movement:${row.number}`);
+    unique(`movement-reference:${row.customerId}:${row.materialId}:${row.reference}`);
+    const key = balance(row.customerId, row.materialId);
+    balances.set(key, (balances.get(key) ?? 0) + (row.type === 'adjustment-in' ? row.quantity : -row.quantity));
+  }
   const totals = new Map(state.orders.map(row => [row.id, { accepted: 0, pending: 0, dispatched: 0, billed: 0 }]));
   for (const row of state.production) {
     requireValid(ids.orders.has(row.orderId) && ids.workers.has(row.workerId) && quantity(row.quantity) && integer(row.accepted, 0, 10000000) && integer(row.rejected, 0, 10000000) && typeof row.inspected === 'boolean' && integer(row.wageRatePaise, 0, 100000000) && date(row.date));
@@ -91,7 +103,15 @@ export function validateBackup(backup, mode, bom) {
     unique(`invoice:${row.number}`);
     totals.get(row.orderId).billed += row.quantity;
   }
-  for (const row of state.audit) requireValid(['customer', 'rate', 'worker', 'inward', 'order', 'production', 'qc', 'dispatch', 'invoice'].includes(row.action) && string(row.recordId) && timestamp(row.createdAt) && (row.actor === undefined || string(row.actor, true)));
+  const paid = new Map();
+  for (const row of state.payments ?? []) {
+    const invoice = state.invoices.find(item => item.id === row.invoiceId);
+    requireValid(string(row.number) && !!invoice && money(row.amountPaise) && ['cash', 'bank', 'upi', 'other'].includes(row.method) && string(row.reference) && date(row.date) && row.date >= invoice.date && timestamp(row.createdAt));
+    unique(`payment:${row.number}`);unique(`payment-reference:${row.reference}`);
+    paid.set(row.invoiceId, (paid.get(row.invoiceId) ?? 0) + row.amountPaise);
+    requireValid(paid.get(row.invoiceId) <= invoice.amountPaise);
+  }
+  for (const row of state.audit) requireValid(['customer', 'rate', 'worker', 'inward', 'order', 'production', 'qc', 'dispatch', 'invoice', 'material-move', 'payment', 'business-record', 'business-import','pos-sale'].includes(row.action) && string(row.recordId) && timestamp(row.createdAt) && (row.actor === undefined || string(row.actor, true)));
   for (const [orderId, total] of totals) requireValid(total.accepted + total.pending <= orders.get(orderId).quantity && total.dispatched <= total.accepted && total.billed <= total.dispatched);
   for (const value of balances.values()) requireValid(Number.isFinite(value) && value >= -1e-7);
   return structuredClone(backup);
@@ -104,7 +124,7 @@ export function parseBackup(text, mode, bom) {
 }
 
 export function isReadableState(state) {
-  return object(state) && integer(state.revision) && recordCollections.every(key => Array.isArray(state[key]));
+  return object(state) && integer(state.revision) && recordCollections.every(key => Array.isArray(state[key])) && ['materialMoves', 'payments','businessRecords'].every(key => state[key] === undefined || Array.isArray(state[key]));
 }
 
 // A restore moves the revision forward so a form open in another tab cannot

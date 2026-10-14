@@ -1,6 +1,6 @@
 import type { Bom, State, Workspace } from '../src/types';
 
-export type Backup = Workspace & { exportedAt: string; schemaVersion: 1 };
+export type Backup = Workspace & { exportedAt: string; schemaVersion: 1 | 2 | 3 };
 export const recordCollections: (keyof Omit<State, 'revision'>)[];
 export const loadErrorMessage: string;
 export const staleRestoreMessage: string;

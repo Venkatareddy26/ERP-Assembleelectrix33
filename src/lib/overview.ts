@@ -55,6 +55,7 @@ export function buildOverview(w: Workspace, now = new Date()) {
   const balances = new Map<string, number>();
   const key = (customerId: string, materialId: string) => `${customerId}:${materialId}`;
   for (const i of s.inwards) balances.set(key(i.customerId, i.materialId), (balances.get(key(i.customerId, i.materialId)) ?? 0) + i.quantity);
+  for (const move of s.materialMoves ?? []) balances.set(key(move.customerId, move.materialId), (balances.get(key(move.customerId, move.materialId)) ?? 0) + (move.type === 'adjustment-in' ? move.quantity : -move.quantity));
   let producedToday = 0, rejectedToday = 0, oldQcPieces = 0, oldQcEntries = 0;
   for (const p of s.production) {
     const totals = orderTotals.get(p.orderId);

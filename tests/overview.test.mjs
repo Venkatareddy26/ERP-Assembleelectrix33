@@ -61,6 +61,13 @@ test('QC age uses record time, rejects use inspection date, unbilled uses agreed
   assert.equal(m.ready, 0);
 });
 
+test('material returns and corrections update readiness without borrowing another customer stock',()=>{
+ const s=emptyState();s.orders=[order('O1','C1')];s.customers=[{id:'C1',name:'First'},{id:'C2',name:'Second'}];
+ s.inwards=[{customerId:'C1',materialId:'M1',quantity:10},{customerId:'C2',materialId:'M1',quantity:100}];
+ s.materialMoves=[{customerId:'C1',materialId:'M1',type:'return',quantity:2},{customerId:'C1',materialId:'M1',type:'adjustment-in',quantity:5},{customerId:'C1',materialId:'M1',type:'adjustment-out',quantity:1}];
+ const m=buildOverview(workspace(s),now);assert.equal(m.shortages.length,1);assert.equal(m.shortages[0].available,12);assert.equal(m.shortages[0].shortfall,8);
+});
+
 test('recent activity is the last eight operational entries and preserves missing actor truth', () => {
   const s = emptyState();
   s.audit = Array.from({ length: 20 }, (_, i) => ({ id: String(i), action: i % 3 ? ['production', 'inward', 'dispatch', 'invoice'][i % 4] : 'customer', recordId: String(i), createdAt: '2026-10-12T10:00:00+05:30' }));

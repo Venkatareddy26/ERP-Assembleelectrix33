@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { buildOverview, orderRiskDescription } from '../lib/overview';
 import type { Workspace } from '../types';
+import { BillingHome } from './billing-home';
 
 const count = (n: number) => new Intl.NumberFormat('en-IN').format(n);
 const money = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n / 100);
@@ -22,6 +23,7 @@ export function Overview({ w, now, recordProduction, newOrder }: { w: Workspace;
   const actions = { production: 'Production', inward: 'Material inward', dispatch: 'Dispatch', invoice: 'Billing' } as Record<string, string>;
 
   return <div className="operations-overview">
+    <BillingHome w={w} now={now}/>
     <section className="attention-board" aria-labelledby="attention-heading">
       <div className="section-heading"><h2 id="attention-heading">Needs attention</h2></div>
       {!hasAttention ? <p className="all-clear">Nothing needs attention right now.</p> : <ul className="attention-list">

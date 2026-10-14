@@ -1,0 +1,28 @@
+.operations-tabs{display:flex;align-items:center;gap:4px;padding:0 12px;border-bottom:1px solid var(--border);background:var(--surface)}
+.operations-tabs [data-slot=tabs-trigger]{min-height:44px;border:0;border-bottom:2px solid transparent;background:transparent;padding:10px 14px;font:inherit;font-size:12px;font-weight:600;color:var(--muted-foreground);white-space:nowrap}
+.operations-tabs [data-state=active]{border-bottom-color:var(--primary);color:var(--primary)}
+.operations-tabs [data-slot=tabs-trigger]:focus-visible{outline-offset:-3px}
+[data-slot=tabs-content]{min-width:0}
+.material-filters{padding:12px 16px}
+.material-filters [data-slot=field]{max-width:520px;gap:6px}
+.material-filters label{font-size:11px;color:var(--muted-foreground)}
+.materials-workspace>.panel-header,.billing-receipts>.panel-header{flex-wrap:wrap;gap:12px}
+.ledger-explanation{font-size:11px;color:var(--muted-foreground);padding:12px 16px;line-height:1.7;border-bottom:1px solid var(--border)}
+.billing-receipts{margin-top:22px}
+#payments-heading{scroll-margin-top:76px}
+.operational-entry-dialog{width:min(560px,calc(100vw - 32px));max-width:560px;max-height:90dvh;overflow-y:auto}
+.operational-entry-dialog [data-slot=alert-description]{font-size:12px;line-height:1.7}
+.bill-payment-summary{margin:16px 0;display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px}
+.bill-payment-summary>div{display:flex;flex-direction:column;gap:4px;text-align:right}
+.bill-payment-summary dt{color:var(--muted-foreground)}
+.bill-payment-summary dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums}
+@media (max-width:639.98px), (max-width:900px) and (max-height:430px) and (orientation:landscape){
+ .materials-workspace>.panel-header>button,.billing-receipts>.panel-header>button{width:100%;min-height:44px}
+ .operations-tabs{padding-inline:8px;gap:0}
+ .operations-tabs [data-slot=tabs-trigger]{flex:1;padding-inline:8px;min-width:0;font-size:12px}
+ .material-filters{padding:12px}
+ .material-filters select{font-size:16px}
+ .ledger-explanation{padding:10px 12px;font-size:11px}
+ .register-table td:is([data-label="Component"],[data-label="Movement"],[data-label="Recorded by"],[data-label="Reference"],[data-label="Returned / correction"],[data-label="Bill / customer"]){flex-basis:100%;overflow-wrap:anywhere}
+ .operational-entry-dialog .form-controls>button{min-width:0;white-space:normal}
+}

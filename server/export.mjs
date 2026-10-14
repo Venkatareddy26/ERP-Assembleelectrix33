@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import { componentLedger, billPaid } from './manufacturing.mjs';
 
 const column = (key, width = 20, type = 'text') => ({ key, width, type });
 const date = key => column(key, 19, 'date');
@@ -15,7 +16,11 @@ export function exportSheets({ state: s, bom: b }, section, options = {}) {
   const sheet = (name, columns, rows, note = '') => ({ name, columns, rows, note });
   const production = s.production.map(p => ({ Order: order(p.orderId)?.number, Customer: customer(order(p.orderId)?.customerId), Worker: worker(p.workerId), Date: p.date, Produced: p.quantity, Accepted: p.inspected ? p.accepted : 'Pending', Rejected: p.inspected ? p.rejected : 'Pending', Quality: p.inspected ? 'Inspected' : 'Awaiting inspection', 'Rejection reason': p.note || '' }));
   switch (section) {
-    case 'billing': return [sheet('Job-work bills', [column('Bill'), column('Customer', 36), date('Date'), column('Order'), number('Quantity'), money('Rate INR'), money('Amount INR')], s.invoices.map(i => ({ Bill: i.number, Customer: customer(order(i.orderId)?.customerId), Date: i.date, Order: order(i.orderId)?.number, Quantity: i.quantity, 'Rate INR': i.ratePaise / 100, 'Amount INR': i.amountPaise / 100 })), 'Job-work charges before tax. Customer-owned material value is excluded. Not a tax invoice.')];
+    case 'billing': return [
+      sheet('Job-work bills', [column('Bill'), column('Customer', 36), date('Date'), column('Order'), number('Quantity'), money('Rate INR'), money('Amount INR')], s.invoices.map(i => ({ Bill: i.number, Customer: customer(order(i.orderId)?.customerId), Date: i.date, Order: order(i.orderId)?.number, Quantity: i.quantity, 'Rate INR': i.ratePaise / 100, 'Amount INR': i.amountPaise / 100 })), 'Job-work charges before tax. Customer-owned material value is excluded. Not a tax invoice.'),
+      sheet('Outstanding bills', [column('Bill'), column('Customer',36), money('Billed INR'), money('Received INR'), money('Outstanding INR')], s.invoices.filter(row=>row.amountPaise>billPaid(s,row.id)).map(row=>({Bill:row.number,Customer:customer(order(row.orderId)?.customerId),'Billed INR':row.amountPaise/100,'Received INR':billPaid(s,row.id)/100,'Outstanding INR':(row.amountPaise-billPaid(s,row.id))/100})), 'Unpaid saved job-work charges, before tax.'),
+      sheet('Payment receipts', [column('Receipt'),column('Bill'),column('Customer',36),date('Date'),column('Method'),column('Reference',36),money('Received INR')], (s.payments??[]).map(row=>{const invoice=s.invoices.find(item=>item.id===row.invoiceId);return {Receipt:row.number,Bill:invoice?.number,Customer:customer(order(invoice?.orderId)?.customerId),Date:row.date,Method:row.method,Reference:row.reference,'Received INR':row.amountPaise/100}}))
+    ];
     case 'customers': return [
       sheet('Customers', [column('Customer', 36), column('Contact or reference', 44), number('Job orders')], s.customers.map(c => ({ Customer: c.name, 'Contact or reference': c.contact, 'Job orders': s.orders.filter(o => o.customerId === c.id).length }))),
       sheet('Product rates', [column('Customer', 36), column('Product ID'), column('Product description', 60), money('Customer rate INR')], s.rates.map(r => ({ Customer: customer(r.customerId), 'Product ID': r.productId, 'Product description': product(r.productId), 'Customer rate INR': r.ratePaise / 100 })), 'Current customer rate per piece. Existing orders retain their agreed rates.')
@@ -26,16 +31,18 @@ export function exportSheets({ state: s, bom: b }, section, options = {}) {
     }))];
     case 'inventory': {
       const balances = new Map();
-      for (const inward of s.inwards) {
-        const key = `${inward.customerId}:${inward.materialId}`;
-        const balance = balances.get(key) ?? { Customer: customer(inward.customerId), 'Material ID': inward.materialId, Description: b.materials.find(m => m.id === inward.materialId)?.name, Received: 0, Consumed: 0 };
-        balance.Received += inward.quantity; balances.set(key, balance);
+      const ledger = componentLedger(s);
+      for (const row of ledger) {
+        const key=JSON.stringify([row.customerId,row.materialId]);
+        const balance=balances.get(key)??{Customer:customer(row.customerId),'Material ID':row.materialId,Description:b.materials.find(m=>m.id===row.materialId)?.name,Received:0,Consumed:0,Returned:0,Correction:0};
+        if(row.kind==='Material inward')balance.Received+=row.received;
+        else if(row.kind==='Production consumption')balance.Consumed+=row.issued;
+        else if(row.kind==='Material return')balance.Returned+=row.issued;
+        else balance.Correction+=row.received-row.issued;
+        balances.set(key,balance);
       }
-      for (const p of s.production) for (const c of p.consumption) {
-        const balance = balances.get(`${order(p.orderId)?.customerId}:${c.materialId}`);
-        if (balance) balance.Consumed += c.quantity;
-      }
-      return [sheet('Stock balances', [column('Customer', 36), column('Material ID'), column('Description', 60), number('Received'), number('Consumed'), number('Balance')], [...balances.values()].map(r => ({ ...r, Balance: r.Received - r.Consumed }))), sheet('Inward register', [column('Customer', 36), column('Material ID'), column('Challan', 30), date('Date'), number('Quantity')], s.inwards.map(i => ({ Customer: customer(i.customerId), 'Material ID': i.materialId, Challan: i.challan, Date: i.date, Quantity: i.quantity })))];
+      return [sheet('Stock balances', [column('Customer', 36), column('Material ID'), column('Description', 60), number('Received'), number('Consumed'), number('Balance'),number('Returned'),number('Correction')], [...balances.values()].map(r => ({ ...r, Balance: r.Received + r.Correction - r.Consumed - r.Returned }))), sheet('Inward register', [column('Customer', 36), column('Material ID'), column('Challan', 30), date('Date'), number('Quantity')], s.inwards.map(i => ({ Customer: customer(i.customerId), 'Material ID': i.materialId, Challan: i.challan, Date: i.date, Quantity: i.quantity }))),
+        sheet('Component ledger',[date('Document date'),column('Customer',36),column('Material ID'),column('Movement',28),column('Reference',28),number('Received'),number('Issued'),number('Running balance'),column('Recorded by',28),column('Reason',64)],ledger.map(row=>({'Document date':row.date,Customer:customer(row.customerId),'Material ID':row.materialId,Movement:row.kind,Reference:row.reference,Received:row.received,Issued:row.issued,'Running balance':row.balance,'Recorded by':row.actor||'Not recorded',Reason:row.note})), 'Posting order; running balances are separate for each customer and component. Includes production consumption for eventual rejects.')];
     }
     case 'production': case 'quality': return [sheet(section === 'quality' ? 'Quality register' : 'Production register', [column('Order'), column('Customer', 36), column('Worker', 30), date('Date'), number('Produced'), number('Accepted'), number('Rejected'), column('Quality', 24), column('Rejection reason', 48)], production, 'All saved entries, including entries awaiting inspection.')];
     case 'dispatch': return [sheet('Dispatch register', [column('Dispatch'), column('Order'), column('Customer', 36), column('Challan', 30), date('Date'), number('Quantity')], s.dispatches.map(d => ({ Dispatch: d.number, Order: order(d.orderId)?.number, Customer: customer(order(d.orderId)?.customerId), Challan: d.challan, Date: d.date, Quantity: d.quantity })))];

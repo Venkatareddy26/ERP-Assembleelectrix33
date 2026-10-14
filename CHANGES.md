@@ -1,5 +1,32 @@
 # Assemble Electrix — changes and verification
 
+## Full-suite screenshot theme and local business workflows
+
+- Matched the supplied screenshot structure across 42 screens: expandable navy sidebar, company menu/header, red/blue actions, split parties view, white registers, pale-blue filters and report navigation. Mobile retains cards, bottom tabs and scrolling More/Data sheets.
+- Added actual owned-item sales/POS, estimates, proformas, orders, delivery challans, suppliers, purchases, payments, expenses, full unpaid returns, bank/cash registers, cheques, loans, company details and atomic Excel item import. Trading stock stays separate from customer BOM components.
+- Added a derived accounting journal and filtered reports with Excel/print. Home totals include new bills and supplier payables. Bill-wise margin is labelled as an estimate, and entered tax summaries are not presented as tax filings.
+- Preserved legacy state and backup imports. New suite snapshots use backup version 3, with ordered-record validation and existing stale-write protection. POS bill/receipt and cheque clearance/payment save atomically.
+- External services remain visibly unconnected; catalogue exports, individual WhatsApp message preparation and official service links provide the working local alternatives. Detailed reference coverage and remaining parity gaps are in `docs/vyapar-reference-coverage.md`.
+- Verification: 52 tests; both builds; 42 routes at desktop, small phones and landscape; real isolated suite saves, POS, report Excel, v3 backups/reload; five-size form/sheet reachability; mobile Excel import; and the existing manufacturing/receipt workflows. No user workspace was used for test writes.
+
+## Screenshot-matched home and REA setup
+
+- Added dark navy desktop navigation, red/blue rounded actions, blue-grey panel dividers and a split billing home based on the supplied Vyapar screenshot. Mobile navigation and sheets retain their existing structure.
+- Added real outstanding receivables, payment totals, monthly daily billed-charge chart, all-time billing total and working register shortcuts. Actual mode never uses screenshot amounts. Operational alerts, production KPIs, due orders and recent activity remain available below the financial home (first on phones).
+- Kept manufacturing shortcuts in the right column instead of presenting unavailable WhatsApp/Google services as working integrations. Purchase accounting, tax filing and full Vyapar feature parity are outside this manufacturing/billing release.
+- Ran `npx rea-agents@latest setup --client codex --yes`: Codex registration and bundled reverse-engineering skill installed; unrelated configuration preserved with a setup backup. Restart Codex to load the MCP registration. Native Ghidra/IDA engines are not installed.
+- New visual source: `src/components/billing-home.tsx` and `src/billing-shell.css`; integrated through Overview and the stylesheet entry point.
+- Validation: 42 tests, local and hosted builds passed; ten modules checked at 1440, 768, 320, 375, 440 and 844px landscape. Isolated browser saves verify that partial payments update home receivables/collections, both sales periods reconcile to saved bills, reload preserves data, backups round-trip and actual mode remains empty.
+
+## Manufacturing and billing release
+
+- Added customer/component balances and a posting-order ledger with recorded receipts, BOM consumption, unused-material returns and stock corrections. Movement forms retain a reason/reference and block unavailable stock or duplicate postings.
+- Added bill-wise payment receipts, partial/full collections, outstanding balances and receipt history. Payments preserve saved bill rates and amounts, reject overpayment and retain revision checks.
+- Updated BOM planning, low-stock alerts, bill previews and Excel exports to reconcile the new ledgers. Existing customer, worker, QC and dispatch rules remain intact.
+- New JSON backups use version 2. Existing stored workspaces and version-1 backups remain readable; new snapshot validation covers material movements and bill receipts.
+- Added domain, backup, export, browser persistence and local SQLite API coverage, plus isolated browser form-save workflows on desktop, small phones and landscape.
+- Delivered scope and future suite expansion are documented in `docs/manufacturing-billing-release.md`.
+
 ## Billing-style manufacturing interface
 
 - Applied a Vyapar-inspired billing-software direction across all ten modules: light navigation grouped into Manufacturing and Records & billing, red primary actions, compact white registers and neutral surfaces.

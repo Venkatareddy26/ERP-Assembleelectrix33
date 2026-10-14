@@ -38,7 +38,7 @@ test('Backup validation rejects partial records, impossible ledgers and incompat
     assert.throws(() => validateBackup(backup, 'demo', bom), /incomplete or damaged/);
   }
   const wrongVersion = fixture();
-  wrongVersion.schemaVersion = 2;
+  wrongVersion.schemaVersion = 99;
   assert.throws(() => validateBackup(wrongVersion, 'demo', bom), /version is not supported/);
   assert.throws(() => validateBackup(fixture(), 'actual', bom), /Switch to that workspace/);
   assert.throws(() => validateBackup(fixture(), 'demo', { ...bom, sha256: 'different' }), /different Products & BOM/);

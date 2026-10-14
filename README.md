@@ -2,6 +2,8 @@
 
 A job-work manufacturing app built from the supplied BOM. React, TypeScript, Vite, Tailwind, shadcn/ui, with SQLite for local runs and browser storage for the hosted version.
 
+The screenshot-based business suite adds owned-item sales/POS, purchases, quotations, expenses, payments, bank/cash registers, cheques, loans, company details, Excel item import and operational reports alongside the manufacturing modules. Read [reference coverage and remaining parity gaps](docs/vyapar-reference-coverage.md) before treating this as a complete replacement for Vyapar. Shared sync, automated messaging, online checkout and tax filing services are not configured. Backups with suite records use version 3; older backups remain readable.
+
 ## Run
 
 Requires Node.js 24 or newer. In this folder:
@@ -39,7 +41,7 @@ The order snapshots its agreed customer rate. Each production entry snapshots th
 
 For local runs, operations persist in `data/actual.sqlite`; demo operations persist in `data/demo.sqlite`. These files and their contents remain unchanged by the hosting fix. The hosted build uses the separate browser stores described above. A saved state has a revision and an audit record for each mutation. Stale forms are rejected to prevent overwriting changes in another tab. This release does not support deleting or editing posted production, inspections, dispatches or bills; correction workflows need to be added before use as a production ledger.
 
-The header Backup button exports the full workspace and BOM as a JSON snapshot. Restore backup beside it accepts a downloaded snapshot for the current workspace and matching Products & BOM list. It checks the file before asking for confirmation and replaces records only after confirmation. Restore works with browser storage and local SQLite, including recovery from unreadable saved records. It advances the revision so forms open in other tabs cannot save against the replaced records. Demo and Actual remain separate; shift, operator, and backup reminders remain browser preferences.
+The header Backup button exports the full workspace and BOM as a JSON snapshot. New snapshots use schema version 2, including component returns/corrections and bill payment receipts; version-1 snapshots remain readable. Restore backup beside it accepts a downloaded snapshot for the current workspace and matching Products & BOM list. It validates records before confirmation and replaces them only after confirmation. Restore works with browser storage and local SQLite, including recovery from unreadable saved records. It advances the revision so stale forms cannot save against restored records. Demo and Actual remain separate; shift, operator, and backup reminders remain browser preferences.
 
 Module exports provide formatted Excel workbooks (all saved records in that module), with readable date and amount columns, frozen headings, and text IDs. Customer and inventory exports include their related registers on separate tabs. Keep exports private. To recover an exact SQLite database, stop the app before copying the database and any associated `-wal`/`-shm` files; restore to the same locations while stopped.
 
@@ -54,7 +56,7 @@ Tests cover customer stock isolation, atomic failure on shortages, BOM consumpti
 
 ## Release boundaries
 
-Bills are job-work statements **before tax**, not statutory tax invoices. This version has no GST calculation, authentication, permissions, shared online database, material returns, scrap recovery, inventory corrections, attendance, wage payments, or multi-user production database. The Vercel build stores records per browser; do not expose the separate SQLite server to a network. These are concrete next development areas, not simulated features.
+Bills are job-work statements **before tax**, not statutory tax invoices. Component returns/corrections and bill-wise payment receipts are supported. GST, authentication, permissions, shared online storage, editable BOMs, posting reversals, scrap recovery, bank reconciliation, attendance and payroll remain future work. The Vercel build stores records per browser; the separate SQLite server is local-only. See [the manufacturing/billing release and expansion plan](docs/manufacturing-billing-release.md) for the delivered scope and staged work.
 
 ## Design
 
@@ -62,7 +64,7 @@ The nine requested design/testing skills are installed under your Codex skills f
 
 ## Overview
 
-Below 640px, the app uses a compact page header and bottom tabs. More contains the other modules, workspace switcher, search, Refresh, Backup, Restore backup, and shift settings. Registers become labeled cards with their existing row actions; the BOM product list opens a separate detail view on tap. Desktop layout and saved data rules remain unchanged.
+Below 640px, the app uses a compact page header and bottom tabs. More contains secondary module links. Data contains workspace selection, search, Refresh, Backup, Restore backup and Shift. Registers become labeled cards; the BOM product list opens a detail view on tap. Materials has Balances / Ledger / Inward tabs. Billing's Payments button jumps to collections and receipt history.
 
 Overview prioritizes outstanding orders due within 3 days (including overdue), orders at risk at their current production pace, customer material shortages against remaining production, QC entries older than 24 hours, today’s QC rejects, and unbilled dispatches. Stock requirements exclude accepted and pending pieces already produced. The flow labels component and product units separately; QC yield uses inspected pieces only.
 

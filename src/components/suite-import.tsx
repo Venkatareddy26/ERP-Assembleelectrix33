@@ -1,0 +1,16 @@
+import { useState } from 'react';
+import { toast } from 'sonner';
+import type { State, Workspace } from '../types';
+import { saveEntry } from '../lib/workspace-client';
+import { downloadExcel } from '../lib/suite';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Alert, AlertDescription } from './ui/alert';
+import { DataTable } from './record-table';
+const keys=['name','type','unit','code','hsn','category','salePrice','purchasePrice','tax'];
+export function SuiteImport({w,operator,saved}:{w:Workspace;operator:string;saved:(s:State)=>void}){
+ const [rows,setRows]=useState<Record<string,string>[]>([]),[revision,setRevision]=useState(w.state.revision),[pending,setPending]=useState(false),[error,setError]=useState('');
+ async function choose(file:File){setRows([]);setError('');setPending(true);try{if(file.size>10*1024*1024)throw Error('Choose an Excel file smaller than 10 MB.');const {default:ExcelJS}=await import('exceljs');const book=new ExcelJS.Workbook();await book.xlsx.load(await file.arrayBuffer());const sheet=book.worksheets[0];if(!sheet||sheet.rowCount<2||sheet.rowCount>1001)throw Error('The first worksheet must contain a heading and 1 to 1,000 rows.');const headings=keys.map((_,i)=>sheet.getRow(1).getCell(i+1).text.trim());if(headings.join('|')!==keys.join('|'))throw Error('Use the template headings in their original order.');const result:Record<string,string>[]=[];for(let n=2;n<=sheet.rowCount;n++){const row:Record<string,string>={};for(let i=0;i<keys.length;i++){const cell=sheet.getRow(n).getCell(i+1);if(cell.type===ExcelJS.ValueType.Formula)throw Error(`Row ${n}: formulas are not accepted. Paste values first.`);row[keys[i]]=cell.text.trim();}if(Object.values(row).some(Boolean))result.push(row)}setRevision(w.state.revision);setRows(result)}catch(e){setError((e as Error).message)}finally{setPending(false)}}
+ async function save(){setPending(true);setError('');try{const result=await saveEntry(w.mode,'business-import',{items:rows,recordedBy:operator},revision);saved(result.state);setRows([]);toast.success('Items imported.')}catch(e){setError((e as Error).message)}finally{setPending(false)}}
+ return <section className="suite-white suite-import"><h2>Import items from Excel</h2><p>Import owned products and services. Your imported manufacturing BOM and customer component balances stay separate.</p><Button variant="outline" disabled={pending} onClick={()=>void downloadExcel('Item import template',keys,[]).catch(e=>toast.error(e.message))}>Download Excel template</Button><label htmlFor="suite-import-file">Choose completed template</label><Input id="suite-import-file" type="file" accept=".xlsx" disabled={pending} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void choose(file)}}/><p>Use product or service for type. Prices exclude tax. Enter a numeric tax percentage. The whole import is rejected if any row is invalid or duplicated.</p>{error&&<Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}{!!rows.length&&<><DataTable rows={rows} columns={keys.map(key=>({title:key,render:(r:Record<string,string>)=>r[key]}))}/><Button disabled={pending} onClick={()=>void save()}>{pending?'Importing…':`Import ${rows.length} items`}</Button></>}</section>;
+}

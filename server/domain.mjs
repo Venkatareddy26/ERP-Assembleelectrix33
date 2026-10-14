@@ -1,4 +1,6 @@
-export const emptyState = () => ({revision:0,customers:[],rates:[],workers:[],inwards:[],orders:[],production:[],dispatches:[],invoices:[],audit:[]});
+import { componentStock, billPaid } from './manufacturing.mjs';
+import { createBusinessRecord } from './commerce.mjs';
+export const emptyState = () => ({revision:0,customers:[],rates:[],workers:[],inwards:[],orders:[],production:[],dispatches:[],invoices:[],materialMoves:[],payments:[],audit:[]});
 const fail = message => {throw new Error(message);};
 const id = () => globalThis.crypto.randomUUID();
 export const today = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -9,12 +11,16 @@ function money(value,label){if(value===null||value===undefined||value==='')fail(
 function date(value){const v=text(value,'Date');if(!/^\d{4}-\d{2}-\d{2}$/.test(v)||isNaN(Date.parse(v))||new Date(v).toISOString().slice(0,10)!==v)fail('Enter a valid date.');return v;}
 function get(rows,key,label){return rows.find(r=>r.id===key)??fail(`${label} was not found. Refresh and try again.`);}
 const total = (rows,key='quantity') => rows.reduce((n,r)=>n+r[key],0);
+function nextNumber(rows,prefix){let next=rows.length+1;while(rows.some(row=>row.number===`${prefix}-${String(next).padStart(4,'0')}`))next++;return `${prefix}-${String(next).padStart(4,'0')}`;}
 export function orderTotals(state,orderId){const p=state.production.filter(r=>r.orderId===orderId);return {produced:total(p),accepted:total(p,'accepted'),rejected:total(p,'rejected'),pending:total(p.filter(r=>!r.inspected)),dispatched:total(state.dispatches.filter(r=>r.orderId===orderId)),billed:total(state.invoices.filter(r=>r.orderId===orderId))};}
-export function stock(state,customerId,materialId){return total(state.inwards.filter(r=>r.customerId===customerId&&r.materialId===materialId))-state.production.filter(p=>get(state.orders,p.orderId,'Order').customerId===customerId).reduce((n,p)=>n+p.consumption.filter(c=>c.materialId===materialId).reduce((a,c)=>a+c.quantity,0),0);}
+export const stock = componentStock;
 export function plan(state,bom,customerId,productId,quantity){return bom.lines.filter(l=>l.productId===productId).map(l=>({...l,name:get(bom.materials,l.materialId,'Material').name,required:l.quantity*quantity,available:stock(state,customerId,l.materialId),shortage:Math.max(0,l.quantity*quantity-stock(state,customerId,l.materialId))}));}
 export function execute(state,bom,action,input){
- const s=structuredClone(state); const b=input; const createdAt=new Date().toISOString(); let record;
+ const s=structuredClone(state); s.materialMoves??=[]; s.payments??=[]; const b=input; const createdAt=new Date().toISOString(); let record;
  switch(action){
+ case 'pos-sale':{s.businessRecords??=[];record=createBusinessRecord(s,{...b,kind:'sale'});s.businessRecords.push(record);const received=Number(b.received||0);if(received<0||!Number.isFinite(received)||Math.abs(received*100-Math.round(received*100))>.00001)fail('Enter a valid received amount with at most 2 decimals.');if(received>0){if(b.method!=='cash'&&Math.round(received*100)>record.amountPaise)fail('Non-cash payment cannot exceed the bill total.');const receipt=createBusinessRecord(s,{kind:'payment-in',date:record.date,sourceId:record.id,method:b.method,accountId:b.accountId,amount:Math.min(received,record.amountPaise/100),reference:record.number+'-receipt'});s.businessRecords.push(receipt);}break;}
+ case 'business-import':{if(!Array.isArray(b.items)||!b.items.length||b.items.length>1000)fail('Choose between 1 and 1,000 item rows.');s.businessRecords??=[];for(const input of b.items){record=createBusinessRecord(s,{kind:'item',date:today(),data:input});s.businessRecords.push(record);}break;}
+ case 'business-record':{record=createBusinessRecord(s,b);s.businessRecords??=[];s.businessRecords.push(record);if(record.kind==='cheque-event'&&record.data.status==='cleared'){const cheque=s.businessRecords.find(r=>r.id===record.sourceId);s.businessRecords.push(createBusinessRecord(s,{kind:cheque.data.direction==='in'?'payment-in':'payment-out',sourceId:record.data.invoiceId,date:record.date,method:'bank',accountId:record.accountId,amount:cheque.amountPaise/100,reference:cheque.number+'-cleared'}));}break;}
  case 'customer':{
   const name=text(b.name,'Customer name');if(s.customers.some(c=>c.name.toLowerCase()===name.toLowerCase()))fail('A customer with this name already exists.');
   record={id:id(),name,contact:typeof b.contact==='string'?b.contact.trim().slice(0,250):'',createdAt};s.customers.push(record);break;
@@ -31,6 +37,23 @@ export function execute(state,bom,action,input){
   get(s.customers,b.customerId,'Customer');get(bom.materials,b.materialId,'Material');const challan=text(b.challan,'Customer challan');
   if(s.inwards.some(r=>r.customerId===b.customerId&&r.challan===challan&&r.materialId===b.materialId))fail('This material is already recorded for this customer challan. Use a distinct challan reference.');
   record={id:id(),customerId:b.customerId,materialId:b.materialId,quantity:qty(b.quantity),challan,date:date(b.date),createdAt};s.inwards.push(record);break;
+ }
+ case 'material-move':{
+  get(s.customers,b.customerId,'Customer');get(bom.materials,b.materialId,'Material');
+  if(!['return','adjustment-in','adjustment-out'].includes(b.type))fail('Choose a material return or stock correction.');
+  const quantity=qty(b.quantity),reference=text(b.reference,'Movement reference'),note=text(b.note,'Reason');
+  if(s.materialMoves.some(row=>row.customerId===b.customerId&&row.materialId===b.materialId&&row.reference===reference))fail('This component movement reference is already recorded for this customer.');
+  const available=stock(s,b.customerId,b.materialId);
+  if(b.type!=='adjustment-in'&&quantity>available)fail(`Only ${available} component pieces are available. Consumed materials cannot be returned.`);
+  record={id:id(),number:nextNumber(s.materialMoves,'RM'),customerId:b.customerId,materialId:b.materialId,type:b.type,quantity,reference,note,date:date(b.date),createdAt};s.materialMoves.push(record);break;
+ }
+ case 'payment':{
+  const invoice=get(s.invoices,b.invoiceId,'Bill'),amountPaise=money(b.amount,'Payment amount'),reference=text(b.reference,'Receipt reference'),paymentDate=date(b.date);
+  if(!['cash','bank','upi','other'].includes(b.method))fail('Choose a payment method.');
+  if(paymentDate<invoice.date)fail('Payment date cannot be before the bill date.');
+  if(amountPaise>invoice.amountPaise-billPaid(s,invoice.id))fail('Payment exceeds the outstanding amount on this bill.');
+  if(s.payments.some(row=>row.reference===reference))fail('This receipt reference has already been recorded.');
+  record={id:id(),number:nextNumber(s.payments,'PAY'),invoiceId:invoice.id,amountPaise,method:b.method,reference,date:paymentDate,createdAt};s.payments.push(record);break;
  }
  case 'order':{
   get(s.customers,b.customerId,'Customer');get(bom.products,b.productId,'Product');
