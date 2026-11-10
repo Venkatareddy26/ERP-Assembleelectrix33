@@ -1,5 +1,12 @@
 # Assemble Electrix — changes and verification
 
+## REA follow-up: returns, POS and party balances
+
+- Credit and debit notes can return selected quantities on paid or unpaid trading bills. Original prices, discounts and tax are preserved; split returns reconcile to the original amounts. The app tracks customer and supplier refunds separately from unpaid balances and records money movement when a refund is actually made.
+- POS bills can be named, parked, resumed, renamed and deleted in the current browser. A resumed bill keeps its parked copy until checkout succeeds. Parking neither reserves stock nor posts a payment.
+- Party details can record and settle dated opening receivables and payables. Configurable credit warnings use saved balances and show projected overages during sale, purchase and POS entry. Warnings leave the decision to save with the operator.
+- [REA investigation notes](docs/rea-feature-investigation.md) distinguish shipped evidence from independently implemented behavior and list the remaining external dependencies.
+
 ## Full-suite screenshot theme and local business workflows
 
 - Matched the supplied screenshot structure across 42 screens: expandable navy sidebar, company menu/header, red/blue actions, split parties view, white registers, pale-blue filters and report navigation. Mobile retains cards, bottom tabs and scrolling More/Data sheets.

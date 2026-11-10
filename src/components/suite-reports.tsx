@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Download, Printer } from 'lucide-react';
 import { toast } from 'sonner';
-import { businessRows, businessDue } from '../../server/commerce.mjs';
+import { businessRows, businessDue, lineNet, refundDue } from '../../server/commerce.mjs';
 import { accountBalances } from '../../server/bookkeeping.mjs';
 import { money, indiaDay, transactions, downloadExcel, partyName, displayDate } from '../lib/suite';
 import type { Workspace } from '../types';
@@ -14,10 +14,10 @@ export function SuiteReports({w}:{w:Workspace}){
  const [report,setReport]=useState('Sale'),[from,setFrom]=useState(indiaDay().slice(0,7)+'-01'),[to,setTo]=useState(indiaDay()),[query,setQuery]=useState(''),[party,setParty]=useState(''),[exporting,setExporting]=useState(false);const printable=useRef<HTMLDivElement>(null);
  useEffect(()=>{const update=()=>{let requested='';try{requested=decodeURIComponent(location.hash.split('/')[1]||'')}catch{}if(reportNames.includes(requested))setReport(requested)};update();window.addEventListener('hashchange',update);return()=>window.removeEventListener('hashchange',update)},[]);
  const snapshot:Workspace={...w,state:{...w.state,invoices:w.state.invoices.filter(r=>r.date<=to),payments:w.state.payments?.filter(r=>r.date<=to),businessRecords:businessRows(w.state).filter(r=>r.date<=to)}};
- const entries=transactions(snapshot).filter(t=>t.date>=from&&t.date<=to&&(!party||t.partyId===party)),business=businessRows(snapshot.state),accounts=accountBalances(w.state,report==='Profit And Loss'?from:'',to);
+ const allEntries=transactions(snapshot),entries=allEntries.filter(t=>t.date>=from&&t.date<=to&&(!party||t.partyId===party)),business=businessRows(snapshot.state),accounts=accountBalances(w.state,report==='Profit And Loss'?from:'',to);
  let headers:string[]=[],rows:(string|number)[][]=[],currencyCols:number[]=[];
  if(['Sale','Purchase','Day book','All Transactions','Cash flow','Party Statement'].includes(report)){
-  const filtered=entries.filter(t=>report==='Sale'?['Sale','Job-work bill','Credit note'].includes(t.type):report==='Purchase'?['Purchase bill','Debit note'].includes(t.type):report==='Cash flow'?t.cashIn||t.cashOut:true);
+  const filtered=entries.filter(t=>report==='Sale'?['Sale','Job-work bill','Credit note','Customer refund'].includes(t.type):report==='Purchase'?['Purchase bill','Debit note','Supplier refund'].includes(t.type):report==='Cash flow'?t.cashIn||t.cashOut:true);
   headers=['Date','Ref no.','Party name','Type','Payment type','Total (₹)','Received / paid (₹)','Balance (₹)'];currencyCols=[5,6,7];rows=filtered.map(t=>[t.date,t.number,t.party,t.type,t.method,t.total/100,t.received/100,t.balance/100]);
   if(report==='Day book'||report==='Cash flow'){headers=['Date','Ref no.','Name','Type','Money in (₹)','Money out (₹)'];currencyCols=[4,5];rows=filtered.filter(t=>t.cashIn||t.cashOut).map(t=>[t.date,t.number,t.party,t.type,t.cashIn/100,t.cashOut/100])}
  }
@@ -28,19 +28,19 @@ export function SuiteReports({w}:{w:Workspace}){
  }
  if(['All parties','Sale Purchase By Party','Sale Purchase By Party Group'].includes(report)){
   const parties=[...w.state.customers.map(c=>({id:c.id,name:c.name,contact:c.contact})),...business.filter(r=>r.kind==='supplier').map(r=>({id:r.id,name:r.data.name,contact:r.data.phone}))].filter(c=>!party||c.id===party);
-  headers=['Party name','Contact','Sale amount (₹)','Purchase amount (₹)','Receivable (₹)','Payable (₹)'];currencyCols=[2,3,4,5];rows=parties.map(c=>{const tx=entries.filter(t=>t.partyId===c.id);return[c.name,c.contact,tx.filter(t=>['Sale','Job-work bill'].includes(t.type)).reduce((n,t)=>n+t.total,0)/100,tx.filter(t=>t.type==='Purchase bill').reduce((n,t)=>n+t.total,0)/100,tx.filter(t=>['Sale','Job-work bill'].includes(t.type)).reduce((n,t)=>n+t.balance,0)/100,tx.filter(t=>t.type==='Purchase bill').reduce((n,t)=>n+t.balance,0)/100]});
-  if(report==='Sale Purchase By Party Group'){rows=rows.length?[['General','All ungrouped parties',...Array.from({length:4},(_,i)=>rows.reduce((n,r)=>n+Number(r[i+2]),0))]]:[];headers[0]='Group name'}
+  headers=['Party name','Contact','Sale amount (₹)','Purchase amount (₹)','Receivable (₹)','Payable (₹)','Refund to customer (₹)','Refund from supplier (₹)'];currencyCols=[2,3,4,5,6,7];rows=parties.map(c=>{const tx=entries.filter(t=>t.partyId===c.id),asOf=allEntries.filter(t=>t.partyId===c.id);return[c.name,c.contact,tx.filter(t=>['Sale','Job-work bill','Credit note'].includes(t.type)).reduce((n,t)=>n+t.total*(t.type==='Credit note'?-1:1),0)/100,tx.filter(t=>['Purchase bill','Debit note'].includes(t.type)).reduce((n,t)=>n+t.total*(t.type==='Debit note'?-1:1),0)/100,asOf.filter(t=>['Sale','Job-work bill','Opening receivable'].includes(t.type)).reduce((n,t)=>n+t.balance,0)/100,asOf.filter(t=>['Purchase bill','Opening payable'].includes(t.type)).reduce((n,t)=>n+t.balance,0)/100,business.filter(r=>r.kind==='sale'&&r.partyId===c.id).reduce((n,r)=>n+refundDue(snapshot.state,r),0)/100,business.filter(r=>r.kind==='purchase'&&r.partyId===c.id).reduce((n,r)=>n+refundDue(snapshot.state,r),0)/100]});
+  if(report==='Sale Purchase By Party Group'){rows=rows.length?[['General','All ungrouped parties',...Array.from({length:6},(_,i)=>rows.reduce((n,r)=>n+Number(r[i+2]),0))]]:[];headers[0]='Group name'}
  }
  if(report==='Party Report By Item'){
   headers=['Party name','Item','Sale quantity','Sale amount (₹)','Purchase quantity','Purchase amount (₹)'];currencyCols=[3,5];const groups=new Map<string,(string|number)[]>();
-  for(const r of business.filter(r=>['sale','purchase'].includes(r.kind)&&r.date>=from&&r.date<=to&&(!party||r.partyId===party)))for(const l of r.lines){const key=r.partyId+':'+l.itemId,row=groups.get(key)||[partyName(w,r.partyId),l.name,0,0,0,0];const i=r.kind==='sale'?2:4;row[i]=Number(row[i])+l.quantity;row[i+1]=Number(row[i+1])+l.amountPaise/100;groups.set(key,row)}rows=[...groups.values()];
+  for(const r of business.filter(r=>['sale','purchase','credit','debit'].includes(r.kind)&&r.date>=from&&r.date<=to&&(!party||r.partyId===party)))for(const l of r.lines){const key=r.partyId+':'+l.itemId,row=groups.get(key)||[partyName(w,r.partyId),l.name,0,0,0,0];const i=['sale','credit'].includes(r.kind)?2:4,sign=['credit','debit'].includes(r.kind)?-1:1;row[i]=Number(row[i])+sign*l.quantity;row[i+1]=Number(row[i+1])+sign*l.amountPaise/100;groups.set(key,row)}rows=[...groups.values()];
  }
  if(report==='Bill Wise Profit'){
   headers=['Date','Invoice no.','Party','Sale before tax (₹)','Estimated cost (₹)','Estimated margin (₹)'];currencyCols=[3,4,5];
   rows=entries.filter(t=>['Sale','Job-work bill'].includes(t.type)).map(t=>{
    let cost=0,net=t.total;
    if(t.record){
-    net=t.record.lines.reduce((n,l)=>n+Math.round(l.quantity*l.ratePaise*(1-l.discountBps/10000)),0);
+    net=t.record.lines.reduce((n,l)=>n+lineNet(l),0);
     cost=t.record.lines.reduce((n,l)=>{const purchases=business.filter(r=>r.kind==='purchase'&&r.createdAt<=t.record!.createdAt&&r.date<=t.date).flatMap(r=>r.lines).filter(i=>i.itemId===l.itemId);const qty=purchases.reduce((n,p)=>n+p.quantity,0),value=purchases.reduce((n,p)=>n+Math.round(p.quantity*p.ratePaise*(1-p.discountBps/10000)),0);return n+(qty?Math.round(l.quantity*value/qty):0)},0);
    }else{
     const invoice=w.state.invoices.find(i=>i.id===t.id),produced=w.state.production.filter(p=>p.orderId===invoice?.orderId&&p.inspected&&p.date<=t.date),accepted=produced.reduce((n,p)=>n+p.accepted,0);
@@ -50,7 +50,7 @@ export function SuiteReports({w}:{w:Workspace}){
   });
  }
  if(report==='Tax summary'){
-  headers=['Date','Invoice','Type','Tax rate %','Taxable amount (₹)','Tax (₹)'];currencyCols=[4,5];rows=business.filter(r=>['sale','purchase','credit','debit'].includes(r.kind)&&r.date>=from&&r.date<=to).flatMap(r=>r.lines.map(l=>{const net=Math.round(l.quantity*l.ratePaise*(1-l.discountBps/10000));return[r.date,r.number,r.kind,l.taxBps/100,net/100,(l.amountPaise-net)/100]}));
+  headers=['Date','Invoice','Type','Tax rate %','Taxable amount (₹)','Tax (₹)'];currencyCols=[4,5];rows=business.filter(r=>['sale','purchase','credit','debit'].includes(r.kind)&&r.date>=from&&r.date<=to).flatMap(r=>r.lines.map(l=>{const net=lineNet(l);const sign=['credit','debit'].includes(r.kind)?-1:1;return[r.date,r.number,r.kind,l.taxBps/100,sign*net/100,sign*(l.amountPaise-net)/100]}));
  }
  const filtered=rows.filter(r=>r.join(' ').toLowerCase().includes(query.toLowerCase()));
  async function exportReport(){setExporting(true);try{await downloadExcel(report,headers,filtered)}catch(e){toast.error((e as Error).message)}finally{setExporting(false)}}

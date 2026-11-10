@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { emptyState, execute, stock } from '../server/domain.mjs';
-import { businessDue, ownedStock, cashBalance, loanTotal, loanSchedule } from '../server/commerce.mjs';
+import { businessDue, ownedStock, cashBalance, loanTotal, loanSchedule, refundDue, returnableLines, lineNet } from '../server/commerce.mjs';
 import { journal, accountBalances } from '../server/bookkeeping.mjs';
+import { partyCredit } from '../server/party-credit.mjs';
 import { validateBackup } from '../server/backup.mjs';
 import { IDBFactory } from 'fake-indexeddb';
 import { createBrowserStore } from '../src/lib/browser-store.mjs';
@@ -48,4 +49,73 @@ test('Reducing-interest loan schedule rounds the final instalment and repayments
  assert.equal(schedule.at(-1).balance,0);assert.equal(schedule.reduce((n,p)=>n+p.principal,0),loan.amountPaise);assert(schedule[0].interest>schedule[1].interest);f.run('cash-adjustment',{amount:100,method:'cash',data:{direction:'in'},note:'Funds for interest'});
  const first=schedule[0];f.run('loan-payment',{sourceId:loan.id,amount:first.amount/100,method:'cash'});let balances=accountBalances(f.state);assert.equal(balances.find(a=>a.account==='Loan: Reducing loan').debit,first.principal);assert.equal(balances.find(a=>a.account==='Loan interest').debit,first.interest);
  f.run('loan-payment',{sourceId:loan.id,amount:(loanTotal(loan)-first.amount)/100,method:'cash'});balances=accountBalances(f.state);const liability=balances.find(a=>a.account==='Loan: Reducing loan');assert.equal(liability.debit,liability.credit);assert.equal(balances.find(a=>a.account==='Loan interest').debit,loanTotal(loan)-loan.amountPaise);
+});
+
+
+test('Paid sales accept partial returns, preserve original prices and cap customer refunds',()=>{
+ const f=fixture();f.run('purchase',{partyId:f.supplier.id,lines:f.line()});const sale=f.run('sale',{partyId:f.customer.id,lines:f.line(3,20)});
+ f.run('payment-in',{sourceId:sale.id,amount:70.80,method:'cash'});
+ const credit=f.run('credit',{sourceId:sale.id,note:'One damaged switch',lines:[{itemId:f.item.id,quantity:1,rate:999,tax:0}]});
+ assert.equal(credit.amountPaise,2360);assert.equal(credit.lines[0].ratePaise,2000);assert.equal(ownedStock(f.state,f.item.id),8);assert.equal(businessDue(f.state,sale),0);assert.equal(refundDue(f.state,sale),2360);
+ f.run('sale-refund',{sourceId:sale.id,amount:10,method:'cash',note:'Cash returned'});assert.equal(refundDue(f.state,sale),1360);assert.throws(()=>f.run('sale-refund',{sourceId:sale.id,amount:14,method:'cash',note:'Too much'}),/exceeds/);
+ f.run('sale-refund',{sourceId:sale.id,amount:13.60,method:'cash',note:'Remaining refund'});assert.equal(refundDue(f.state,sale),0);assert.equal(cashBalance(f.state),4720);
+ const cost=accountBalances(f.state).find(a=>a.account==='Cost of goods sold');assert.equal(cost.debit-cost.credit,2000);assert.equal(journal(f.state).reduce((n,e)=>n+e.debit-e.credit,0),0);
+ const backup={schemaVersion:3,mode:'actual',bom,state:f.state,exportedAt:new Date().toISOString()};assert.doesNotThrow(()=>validateBackup(backup,'actual',bom));
+ const bad=structuredClone(backup);bad.state.businessRecords.find(r=>r.kind==='credit').lines[0].netPaise++;assert.throws(()=>validateBackup(bad,'actual',bom),/damaged/);
+});
+test('Many fractional returns allocate every original paise once, including tax and historical cost',()=>{
+ const f=fixture();f.run('purchase',{partyId:f.supplier.id,lines:f.line(3,.01)});const sale=f.run('sale',{partyId:f.customer.id,lines:[{itemId:f.item.id,quantity:3,rate:.01,tax:18,discount:0}]});
+ for(let n=0;n<3;n++)f.run('credit',{sourceId:sale.id,note:'Fractional return',lines:[{itemId:f.item.id,quantity:1}]});
+ const credits=f.state.businessRecords.filter(r=>r.kind==='credit');assert.equal(credits.reduce((n,r)=>n+r.amountPaise,0),sale.amountPaise);assert.equal(credits.flatMap(r=>r.lines).reduce((n,l)=>n+lineNet(l),0),lineNet(sale.lines[0]));assert.equal(ownedStock(f.state,f.item.id),3);assert.equal(returnableLines(f.state,sale)[0].quantity,0);
+ assert.throws(()=>f.run('credit',{sourceId:sale.id,note:'Duplicate',lines:[{itemId:f.item.id,quantity:.001}]}),/quantity/);
+ const cost=accountBalances(f.state).find(a=>a.account==='Cost of goods sold');assert.equal(cost.debit,cost.credit);
+ assert.doesNotThrow(()=>validateBackup({schemaVersion:3,mode:'actual',bom,state:f.state,exportedAt:new Date().toISOString()},'actual',bom));
+});
+test('Unpaid partial returns reduce debt, cap later receipts and leave money unchanged',()=>{
+ const f=fixture();f.run('purchase',{partyId:f.supplier.id,lines:f.line()});const sale=f.run('sale',{partyId:f.customer.id,lines:f.line(3,20)});f.run('credit',{sourceId:sale.id,note:'Return one',lines:[{itemId:f.item.id,quantity:1}]});assert.equal(businessDue(f.state,sale),4720);assert.equal(refundDue(f.state,sale),0);assert.equal(cashBalance(f.state),0);
+ assert.throws(()=>f.run('payment-in',{sourceId:sale.id,amount:47.21,method:'cash'}),/exceed/);f.run('payment-in',{sourceId:sale.id,amount:47.20,method:'cash'});assert.equal(businessDue(f.state,sale),0);
+ assert.throws(()=>f.run('credit',{sourceId:sale.id,note:'Invalid',lines:[{itemId:f.item.id,quantity:1},{itemId:f.item.id,quantity:1}]}),/unreturned|once/);
+});
+test('Paid purchase returns post supplier refunds, conserve stock and balance the journal',()=>{
+ const f=fixture();const bank=f.run('account',{data:{name:'Refund bank'},amount:100}),purchase=f.run('purchase',{partyId:f.supplier.id,lines:f.line(3,10)});f.run('payment-out',{sourceId:purchase.id,amount:35.40,method:'bank',accountId:bank.id});
+ f.run('debit',{sourceId:purchase.id,note:'Return one',lines:[{itemId:f.item.id,quantity:1}]});assert.equal(refundDue(f.state,purchase),1180);assert.equal(ownedStock(f.state,f.item.id),2);
+ f.run('purchase-refund',{sourceId:purchase.id,amount:11.80,method:'bank',accountId:bank.id,note:'Supplier transferred refund'});assert.equal(refundDue(f.state,purchase),0);assert.equal(businessDue(f.state,purchase),0);
+ const balances=accountBalances(f.state),a=balances.find(a=>a.account==='Bank: Refund bank');assert.equal(a.debit-a.credit,7640);assert.equal(balances.find(a=>a.account==='Owned inventory').debit-balances.find(a=>a.account==='Owned inventory').credit,2000);assert.equal(journal(f.state).reduce((n,e)=>n+e.debit-e.credit,0),0);
+ assert.doesNotThrow(()=>validateBackup({schemaVersion:3,mode:'actual',bom,state:f.state,exportedAt:new Date().toISOString()},'actual',bom));
+});
+test('Return/refund dates, available stock, actual cash and stale writes remain enforced',async()=>{
+ const f=fixture();const purchase=f.run('purchase',{partyId:f.supplier.id,lines:f.line(3,10)}),sale=f.run('sale',{partyId:f.customer.id,lines:f.line(3,20)});
+ assert.throws(()=>f.run('debit',{sourceId:purchase.id,note:'Already sold',lines:[{itemId:f.item.id,quantity:1}]}),/stock/);
+ assert.throws(()=>f.run('credit',{date:'2026-10-13',sourceId:sale.id,note:'Earlier',lines:[{itemId:f.item.id,quantity:1}]}),/predate/);
+ f.run('payment-in',{sourceId:sale.id,amount:70.80,method:'cash'});f.run('credit',{date:'2026-10-15',sourceId:sale.id,note:'Tomorrow',lines:[{itemId:f.item.id,quantity:1}]});
+ assert.throws(()=>f.run('sale-refund',{sourceId:sale.id,amount:23.60,method:'cash',note:'Too soon'}),/available/);
+ f.run('expense',{amount:70.80,method:'cash',data:{name:'Courier',category:'Transport'}});assert.throws(()=>f.run('sale-refund',{date:'2026-10-15',sourceId:sale.id,amount:23.60,method:'cash',note:'No funds'}),/cash/);
+ const store=createBrowserStore({bom,indexedDBFactory:new IDBFactory()});let w=await store.load('actual');const backup={schemaVersion:3,mode:'actual',bom,state:f.state,exportedAt:new Date().toISOString()};const restored=await store.restore('actual',backup,w.state.revision);assert(restored.state.businessRecords.some(r=>r.kind==='credit'));
+ await assert.rejects(store.save('actual','business-record',{kind:'credit',date:'2026-10-15',sourceId:sale.id,note:'Stale',lines:[{itemId:f.item.id,quantity:1}]},w.state.revision),/changed/);
+});
+
+test('Opening balances post without revenue or cash, settle partially, and survive validated backup',()=>{
+ const f=fixture(),customer=f.customer.id,supplier=f.supplier.id;
+ const receivable=f.run('opening-receivable',{partyId:customer,amount:75,note:'From old ledger'}),payable=f.run('opening-payable',{partyId:supplier,amount:30,note:'From old ledger'});
+ assert.equal(cashBalance(f.state),0);assert.equal(accountBalances(f.state).some(a=>['income','expense'].includes(a.category)),false);
+ assert.equal(accountBalances(f.state,'','2026-10-13').length,0);
+ assert.throws(()=>f.run('opening-receivable',{partyId:customer,amount:100,note:'Duplicate'}),/already recorded/);
+ assert.throws(()=>f.run('opening-payable',{partyId:customer,amount:100,note:'Wrong type'}),/Supplier/);
+ f.run('party-credit',{partyId:customer,data:{enabled:'true',limit:'40'}});assert.equal(partyCredit(f.state,customer).exceeded,true);
+ f.run('payment-in',{sourceId:receivable.id,amount:40,method:'cash'});f.run('payment-out',{sourceId:payable.id,amount:10,method:'cash'});
+ assert.equal(businessDue(f.state,receivable),3500);assert.equal(businessDue(f.state,payable),2000);assert.equal(cashBalance(f.state),3000);assert.equal(partyCredit(f.state,customer).exceeded,false);
+ assert.throws(()=>f.run('payment-out',{sourceId:payable.id,amount:21,method:'cash'}),/exceed/);
+ assert.throws(()=>f.run('payment-in',{sourceId:payable.id,amount:1,method:'cash'}),/not found/);
+ const balances=accountBalances(f.state);assert.equal(balances.reduce((n,a)=>n+a.debit-a.credit,0),0);
+ const backup={schemaVersion:3,mode:'actual',bom,state:f.state,exportedAt:new Date().toISOString()};assert.doesNotThrow(()=>validateBackup(backup,'actual',bom));
+});
+
+test('Open refunds are shown separately from invoice debt at the reporting date',()=>{
+ const f=fixture();const p=f.run('purchase',{partyId:f.supplier.id,lines:f.line(10)});
+ f.run('cash-adjustment',{amount:118,method:'cash',data:{direction:'in'},note:'Opening'});f.run('payment-out',{sourceId:p.id,amount:118,method:'cash'});
+ const s=f.run('sale',{partyId:f.customer.id,lines:f.line(2,20)});f.run('payment-in',{sourceId:s.id,amount:47.20,method:'cash'});
+ f.run('credit',{sourceId:s.id,date:'2026-10-15',note:'Return one',lines:[{itemId:f.item.id,quantity:1}]});f.run('debit',{sourceId:p.id,date:'2026-10-15',note:'Return one',lines:[{itemId:f.item.id,quantity:1}]});
+ assert.equal(accountBalances(f.state,'','2026-10-14').some(a=>a.account.includes('refunds')),false);
+ const balances=accountBalances(f.state),net=name=>{const a=balances.find(a=>a.account===name);return a.debit-a.credit};
+ assert.equal(net('Trade receivables'),0);assert.equal(net('Trade payables'),0);assert.equal(net('Customer refunds payable'),-2360);assert.equal(net('Supplier refunds receivable'),1180);
 });

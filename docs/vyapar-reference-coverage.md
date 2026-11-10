@@ -7,18 +7,18 @@ The 46 supplied screenshots (1532–1577) define the visual direction. Assemble 
 | Reference | Screen | Delivered behaviour |
 |---|---|---|
 | 1532 | Home | Navy expandable navigation, business header, sale/purchase actions, genuine receivable/payable totals, daily sales chart, report links and factory queues. Totals include saved trading bills and existing job-work bills. |
-| 1533 | Parties | Customer/supplier list, search, selected-party transactions and unpaid balances. Existing customer-specific manufacturing rates remain accessible. |
+| 1533 | Parties | Customer/supplier list, search, selected-party transactions and unpaid balances. Existing customer-specific manufacturing rates remain accessible. Parties support dated opening receivables and payables, their settlement, and configurable credit warnings. |
 | 1536–1537 | Items | Products/services with code/barcode, unit, HSN/SAC, category, sale/purchase prices and entered tax rate. Pricing and Stock tabs explain the separate owned-stock ledger. |
 | 1538 | Sale invoices | Saved line-item sales, discounts, entered tax, status, outstanding amounts, receipts, preview, print and Excel. Existing job-work bills remain in their original register and also appear in reports. |
 | 1539–1540 | Estimate, proforma | Separate immutable documents with full conversion to a sale, preserving saved party/lines/prices. Conversion cannot be repeated. |
 | 1541 | Payment-In | Bill-specific partial/full trading receipts with cash/bank/UPI/other methods. Existing job-work collections remain available in Billing. |
 | 1542–1543 | Sale orders, challans | Owned-item orders and delivery records; full conversion to a sale. Delivery reserves/issues owned stock; its sale conversion does not issue stock again. Manufacturing dispatch still requires accepted QC pieces. |
-| 1544 | Credit note | Full return of an unpaid trading bill, with reason, stock restoration and reversal of sales/tax. Paid or partly paid returns are blocked pending a separate refund workflow. |
-| 1545 | POS | Item name/code search (including keyboard barcode entry), cart, quantity/rate/discount/tax, customer/date, payment mode, cash change and remarks. Bill and optional receipt save atomically; print preview follows. No loyalty programme or multi-bill parking is claimed. |
+| 1544 | Credit note | Partial or full returns of paid and unpaid trading sales, with reason, stock restoration and reversal of sales/tax. Customer refunds are recorded separately up to the amount owed. |
+| 1545 | POS | Item name/code search (including keyboard barcode entry), cart, quantity/rate/discount/tax, customer/date, payment mode, cash change and remarks. Bill and optional receipt save atomically; print preview follows. Park, name, resume and delete bills in the current browser. Drafts do not reserve stock, post payments or appear in backups. Loyalty points are not implemented. |
 | 1546, 1549 | Purchases, purchase orders | Supplier-specific purchased stock, bills, unpaid balances, orders and one-time full conversion. Owned trading stock never borrows customer-owned BOM components. |
 | 1547 | Payment-Out | Partial/full supplier bill settlement, selected bank account or cash, date and reference. Overpayment is blocked. |
 | 1548 | Expenses | Category, description, date, amount and payment method. Cash expenses cannot borrow money from a future receipt. |
-| 1550 | Debit note | Full unpaid purchase return, reason, stock checks and payable/tax reversal. |
+| 1550 | Debit note | Partial or full purchase return, reason, stock checks and payable/tax reversal. Supplier refunds are recorded separately up to the amount owed. |
 | 1556–1557 | Banks, cash | Manually recorded bank accounts/opening balances, receipt/payment balances, cash register and audited cash adjustments. No direct bank connection is implied. |
 | 1558 | Cheques | Received/issued cheques, due date and number; cancellation or one-time clearance. Clearance applies a real payment to a selected outstanding bill and bank account in one save. |
 | 1559 | Loans | Principal, fixed annual reducing interest, monthly instalment estimate, scheduled total, repayments and remaining scheduled balance. Principal enters cash; fees and variable rates need separate records. |
@@ -41,7 +41,7 @@ The 46 supplied screenshots (1532–1577) define the visual direction. Assemble 
 | 1554 | Online store exports a catalogue. Publishing, checkout, payments and live web orders need a connected store/backend. |
 | 1555 | Smart Ads links to Google Ads. It does not create or purchase campaigns. |
 
-This is **not full Vyapar parity**. Other gaps include partial returns/refunds, document editing/voiding, multi-company accounting, full GST return/e-invoice/e-waybill services, automated bank reconciliation, remote sync and account permissions, loyalty points, parked POS bills and a vendor barcode library. New records are intentionally immutable; a future edit/reversal workflow must preserve the stock/payment history.
+This is **not full Vyapar parity**. Other gaps include document editing/voiding, multi-company accounting, full GST return/e-invoice/e-waybill services, automated bank reconciliation, remote sync and account permissions, loyalty points and a vendor barcode library. New records are intentionally immutable; a future edit/reversal workflow must preserve the stock/payment history.
 
 ## Storage and recovery
 
@@ -59,6 +59,8 @@ This is **not full Vyapar parity**. Other gaps include partial returns/refunds, 
 - Verification: `tests/commerce.test.mjs`, plus existing manufacturing, backup, storage and export tests. Browser screenshots and isolated test records remain outside the Git deliverable.
 
 ## Verified
+
+- REA follow-up: 65 automated tests, local and hosted builds, and isolated 320 px and 1440 px browser workflows for opening balances, credit warnings, refunds, stock, reports and POS draft recovery. [Static findings and limits](rea-feature-investigation.md).
 
 - 52 automated tests pass, including atomic POS save, cheque settlement, dated cash/stock checks, backup validation, stale writes, persistence and legacy manufacturing workflows.
 - All 42 module routes load without browser exceptions or document overflow at 1920×1080, 375×667, 320×568 and 844×390.

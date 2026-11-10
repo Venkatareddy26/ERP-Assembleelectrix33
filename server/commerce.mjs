@@ -1,7 +1,9 @@
+import { normalizePartyCredit } from './party-credit.mjs';
 // Purchased stock and trading documents are separate from customer-owned BOM stock.
-export const businessKinds = ['supplier','item','company','sale','estimate','proforma','sales-order','delivery','purchase','purchase-order','credit','debit','payment-in','payment-out','expense','account','cash-adjustment','cheque','cheque-event','loan','loan-payment'];
+export const businessKinds = ['supplier','item','company','sale','estimate','proforma','sales-order','delivery','purchase','purchase-order','credit','debit','payment-in','payment-out','sale-refund','purchase-refund','party-credit','opening-receivable','opening-payable','expense','account','cash-adjustment','cheque','cheque-event','loan','loan-payment'];
 export const documentKinds = ['sale','estimate','proforma','sales-order','delivery','purchase','purchase-order'];
 const prefixes = {supplier:'SUP',item:'ITM',company:'CO',sale:'INV',estimate:'EST',proforma:'PRO','sales-order':'SO',delivery:'CH',purchase:'PUR','purchase-order':'PO',credit:'CN',debit:'DN','payment-in':'IN','payment-out':'OUT',expense:'EXP',account:'BANK','cash-adjustment':'CASH',cheque:'CHQ','cheque-event':'CHS',loan:'LOAN','loan-payment':'EMI'};
+Object.assign(prefixes,{'sale-refund':'REF','purchase-refund':'SREF','party-credit':'LIMIT','opening-receivable':'OBR','opening-payable':'OBP'});
 const fail = message => { throw new Error(message); };
 const str = (value, label, required = true) => typeof value === 'string' && value.length <= 250 && (!required || value.trim()) ? value.trim() : fail(`${label} is required (up to 250 characters).`);
 const cash = (value, label, zero = false) => { const n = Number(value); if (value === '' || value == null || !Number.isFinite(n) || n < (zero ? 0 : .01) || n > 1000000 || Math.abs(n * 100 - Math.round(n * 100)) > .00001) fail(`${label} must be ${zero ? 'zero or ' : ''}positive, with at most 2 decimals (maximum ₹10,00,000).`); return Math.round(n * 100); };
@@ -9,14 +11,23 @@ const num = (value, label, minimum, maximum) => { const n = Number(value); if (v
 const day = value => { const v = str(value, 'Date'); if (!/^\d{4}-\d{2}-\d{2}$/.test(v) || !Number.isFinite(Date.parse(v)) || new Date(v).toISOString().slice(0,10) !== v) fail('Enter a valid date.'); return v; };
 export const businessRows = state => state.businessRecords || [];
 export function cashBalance(state) {
-  return (state.payments||[]).filter(p=>p.method==='cash').reduce((n,p)=>n+p.amountPaise,0)+businessRows(state).reduce((n,r)=>n+(r.kind==='loan'||r.kind==='cash-adjustment'&&r.data.direction==='in'||r.kind==='payment-in'&&r.method==='cash'?r.amountPaise:0)-(r.kind==='cash-adjustment'&&r.data.direction==='out'||['payment-out','expense','loan-payment'].includes(r.kind)&&r.method==='cash'?r.amountPaise:0),0);
+  return (state.payments||[]).filter(p=>p.method==='cash').reduce((n,p)=>n+p.amountPaise,0)+businessRows(state).reduce((n,r)=>n+(r.kind==='loan'||r.kind==='cash-adjustment'&&r.data.direction==='in'||['payment-in','purchase-refund'].includes(r.kind)&&r.method==='cash'?r.amountPaise:0)-(r.kind==='cash-adjustment'&&r.data.direction==='out'||['payment-out','sale-refund','expense','loan-payment'].includes(r.kind)&&r.method==='cash'?r.amountPaise:0),0);
 }
 export function ownedStock(state, itemId) {
   return businessRows(state).reduce((sum, row) => sum + (row.lines || []).filter(l => l.itemId === itemId).reduce((n, l) => n + l.quantity, 0) * (['purchase','credit'].includes(row.kind) ? 1 : ['sale','delivery','debit'].includes(row.kind) && !(row.kind === 'sale' && businessRows(state).find(s => s.id === row.sourceId)?.kind === 'delivery') ? -1 : 0), 0);
 }
 export function businessDue(state, record) {
   const rows = businessRows(state);
-  return record.amountPaise - rows.filter(r => r.sourceId === record.id && ['payment-in','payment-out','credit','debit'].includes(r.kind)).reduce((sum,r) => sum + r.amountPaise, 0);
+  return Math.max(0,record.amountPaise - rows.filter(r => r.sourceId === record.id && ['payment-in','payment-out','credit','debit'].includes(r.kind)).reduce((sum,r) => sum + r.amountPaise, 0));
+}
+export const lineNet = line => line.netPaise ?? Math.round(line.quantity*line.ratePaise*(10000-line.discountBps)/10000);
+export function returnableLines(state,record) {
+  const returns=businessRows(state).filter(r=>r.sourceId===record.id&&['credit','debit'].includes(r.kind));
+  return record.lines.map(l=>({...l,quantity:Math.max(0,Math.round((l.quantity-returns.flatMap(r=>r.lines).filter(t=>t.itemId===l.itemId).reduce((n,t)=>n+t.quantity,0))*1000)/1000)}));
+}
+export function refundDue(state,record) {
+  const linked=businessRows(state).filter(r=>r.sourceId===record.id);
+  return Math.max(0,linked.filter(r=>['payment-in','payment-out','credit','debit'].includes(r.kind)).reduce((n,r)=>n+r.amountPaise,0)-record.amountPaise-linked.filter(r=>['sale-refund','purchase-refund'].includes(r.kind)).reduce((n,r)=>n+r.amountPaise,0));
 }
 export function loanSchedule(record) {
   const months=Number(record.data.months),rate=Number(record.data.interest)/1200;
@@ -39,6 +50,15 @@ export function createBusinessRecord(state, input, id = crypto.randomUUID(), cre
   const row = {id,kind,number:`${prefixes[kind]}-${String(index).padStart(4,'0')}`,date:day(input.date),partyId:'',sourceId:'',reference:str(input.reference || '', 'Reference', false),note:str(input.note || '', 'Notes', false),method:'',accountId:'',amountPaise:0,lines:[],data:{},createdAt};
   if (row.reference && rows.some(r => r.kind === kind && r.reference === row.reference)) fail('This reference is already recorded.');
   const find = (key, allowed, label) => rows.find(r => r.id === key && allowed.includes(r.kind)) || fail(`${label} was not found.`);
+  if(kind==='party-credit')Object.assign(row,normalizePartyCredit(state,input));
+  if(['opening-receivable','opening-payable'].includes(kind)) {
+    row.partyId=str(input.partyId,'Party');
+    if(kind==='opening-payable')find(row.partyId,['supplier'],'Supplier');
+    else if(!state.customers.some(c=>c.id===row.partyId))fail('Customer was not found.');
+    if(rows.some(r=>r.kind===kind&&r.partyId===row.partyId))fail('An opening balance is already recorded for this party.');
+    row.amountPaise=cash(input.amount,'Opening balance');
+    row.note=str(input.note,'Opening balance reason');
+  }
   if (['supplier','item','company','account','loan'].includes(kind)) {
     row.data.name = str(data.name, 'Name');
     if (kind !== 'company' && rows.some(r => r.kind === kind && r.data.name.toLowerCase() === row.data.name.toLowerCase())) fail('This name already exists.');
@@ -88,22 +108,44 @@ export function createBusinessRecord(state, input, id = crypto.randomUUID(), cre
   }
   if(['credit','debit'].includes(kind)) {
     const source = find(input.sourceId,kind === 'credit' ? ['sale'] : ['purchase'],'Original bill');
-    if(rows.some(r => r.sourceId === source.id && ['credit','debit','payment-in','payment-out'].includes(r.kind))) fail('Only an unpaid, unreturned bill can be returned in full.');
     if(row.date < source.date) fail('Return cannot predate its bill.');
-    row.sourceId=source.id;row.partyId=source.partyId;row.lines=structuredClone(source.lines);row.amountPaise=source.amountPaise;
+    const prior=rows.filter(r=>r.sourceId===source.id&&['credit','debit'].includes(r.kind));
+    if(prior.some(r=>r.date>row.date))fail('Return date cannot precede an earlier recorded return.');
+    const available=returnableLines(state,source),requested=input.lines===undefined?available.filter(l=>l.quantity>0):input.lines;
+    if(!Array.isArray(requested)||!requested.length||requested.length>source.lines.length)fail('Choose unreturned item quantities.');
+    const seen=new Set();
+    row.lines=requested.map(l=>{
+      const original=source.lines.find(s=>s.itemId===l.itemId),remaining=available.find(s=>s.itemId===l.itemId);
+      if(!original||seen.has(l.itemId))fail('Choose each original bill item only once.');seen.add(l.itemId);
+      const quantity=num(l.quantity,'return quantity',.001,remaining.quantity);
+      if(Math.abs(quantity*1000-Math.round(quantity*1000))>.00001)fail('Quantity supports at most 3 decimals.');
+      const previous=prior.flatMap(r=>r.lines).filter(s=>s.itemId===l.itemId),returned=previous.reduce((n,s)=>n+s.quantity,0);
+      if(!previous.length&&quantity===original.quantity)return structuredClone(original);
+      const fraction=Math.min(1,(returned+quantity)/original.quantity);
+      const netPaise=Math.round(lineNet(original)*fraction)-previous.reduce((n,s)=>n+lineNet(s),0);
+      const taxPaise=Math.round((original.amountPaise-lineNet(original))*fraction)-previous.reduce((n,s)=>n+s.amountPaise-lineNet(s),0);
+      return {...original,quantity,netPaise,amountPaise:netPaise+taxPaise};
+    });
+    row.sourceId=source.id;row.partyId=source.partyId;row.amountPaise=row.lines.reduce((n,l)=>n+l.amountPaise,0);
     row.note=str(input.note,'Return reason');
-    if(kind === 'debit') for(const l of row.lines) if(find(l.itemId,['item'],'Item').data.type === 'product' && l.quantity > ownedStock(state,l.itemId)) fail('Purchased stock has already been used; this full return is unavailable.');
+    if(kind === 'debit') for(const l of row.lines) if(find(l.itemId,['item'],'Item').data.type === 'product' && l.quantity > ownedStock(state,l.itemId)+.000001) fail('Not enough owned stock for this purchase return.');
   }
-  if(['payment-in','payment-out','expense','cash-adjustment','loan-payment'].includes(kind)) {
+  if(['payment-in','payment-out','sale-refund','purchase-refund','expense','cash-adjustment','loan-payment'].includes(kind)) {
     row.amountPaise=cash(input.amount,'Amount');
     if(!['cash','bank','upi','other'].includes(input.method)) fail('Select a payment method.');
     row.method=input.method;
     if(input.accountId) {find(input.accountId,['account'],'Bank account');row.accountId=input.accountId;}
     if(['bank','upi'].includes(row.method) && !row.accountId) fail('Select the bank account for this payment.');
     if(['payment-in','payment-out'].includes(kind)) {
-      const source=find(input.sourceId,kind === 'payment-in' ? ['sale'] : ['purchase'],'Bill');
+      const source=find(input.sourceId,kind === 'payment-in' ? ['sale','opening-receivable'] : ['purchase','opening-payable'],'Bill or opening balance');
       if(row.date < source.date || row.amountPaise > businessDue(state,source)) fail('Payment must follow the bill date and cannot exceed its balance.');
       row.sourceId=source.id;row.partyId=source.partyId;
+    }
+    if(['sale-refund','purchase-refund'].includes(kind)) {
+      const source=find(input.sourceId,kind==='sale-refund'?['sale']:['purchase'],'Original bill');
+      const dated={...state,businessRecords:rows.filter(r=>r.date<=row.date)};
+      if(row.date<source.date||row.amountPaise>Math.min(refundDue(state,source),refundDue(dated,source)))fail('Refund exceeds the paid return balance available on this date.');
+      row.sourceId=source.id;row.partyId=source.partyId;row.note=str(input.note,'Refund reason');
     }
     if(kind === 'expense') {row.data.category=str(data.category,'Expense category');row.data.name=str(data.name,'Expense description');}
     if(kind === 'cash-adjustment') {if(!['in','out'].includes(data.direction)) fail('Select add or remove cash.');row.data.direction=data.direction;row.note=str(input.note,'Adjustment reason');if(row.method !== 'cash') fail('Cash corrections must use cash.');}
@@ -138,7 +180,7 @@ export function createBusinessRecord(state, input, id = crypto.randomUUID(), cre
     const products=[...new Set(row.lines.map(l=>l.itemId))].filter(itemId=>rows.find(r=>r.id===itemId)?.data.type==='product');
     for(const date of [...new Set(after.businessRecords.map(r=>r.date))].sort())for(const itemId of products)if(ownedStock({...after,businessRecords:after.businessRecords.filter(r=>r.date<=date)},itemId)<-.000001)fail('The document would make dated owned-stock balances negative. Check the receipt and issue dates.');
   }
-  if(row.method==='cash'&&['expense','payment-out','loan-payment','cash-adjustment'].includes(kind)){
+  if(row.method==='cash'&&['expense','payment-out','sale-refund','loan-payment','cash-adjustment'].includes(kind)){
     for(const date of [...new Set([...after.businessRecords.map(r=>r.date),...(state.payments||[]).map(p=>p.date)])].sort())if(cashBalance({...after,payments:(state.payments||[]).filter(p=>p.date<=date),businessRecords:after.businessRecords.filter(r=>r.date<=date)})<0)fail('Not enough cash in hand on this date. Record the opening cash or use the correct bank account.');
   }
   return row;

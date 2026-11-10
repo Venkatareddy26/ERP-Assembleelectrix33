@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { billPaid } from '../../server/manufacturing.mjs';
-import { businessDue, businessRows } from '../../server/commerce.mjs';
+import { businessDue, businessRows, refundDue } from '../../server/commerce.mjs';
 import type { Workspace } from '../types';
 
 const money = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(value / 100);
@@ -16,11 +16,12 @@ export function BillingHome({ w, now }: { w: Workspace; now: Date }) {
   const invoices = billed.filter(b => period === 'all' || b.date.slice(0, 7) === month);
   const sales = invoices.reduce((sum, b) => sum + b.amountPaise, 0);
   const outstanding = w.state.invoices.filter(b => b.amountPaise > billPaid(w.state, b.id));
-  const tradeOutstanding=business.filter(r=>r.kind==='sale'&&businessDue(w.state,r)>0);
-  const receivable = outstanding.reduce((sum, b) => sum + b.amountPaise - billPaid(w.state, b.id), 0)+tradeOutstanding.reduce((n,r)=>n+businessDue(w.state,r),0);
+  const tradeOutstanding=business.filter(r=>['sale','opening-receivable'].includes(r.kind)&&businessDue(w.state,r)>0);
+  const supplierRefunds=business.filter(r=>r.kind==='purchase').reduce((n,r)=>n+refundDue(w.state,r),0),customerRefunds=business.filter(r=>r.kind==='sale').reduce((n,r)=>n+refundDue(w.state,r),0);
+  const receivable = supplierRefunds+outstanding.reduce((sum, b) => sum + b.amountPaise - billPaid(w.state, b.id), 0)+tradeOutstanding.reduce((n,r)=>n+businessDue(w.state,r),0);
   const parties = new Set(outstanding.map(b => w.state.orders.find(o => o.id === b.orderId)?.customerId));
   tradeOutstanding.forEach(r=>parties.add(r.partyId));
-  const payable=business.filter(r=>r.kind==='purchase').reduce((n,r)=>n+businessDue(w.state,r),0);
+  const payable=customerRefunds+business.filter(r=>['purchase','opening-payable'].includes(r.kind)).reduce((n,r)=>n+businessDue(w.state,r),0);
   const points = Array.from({ length: days }, (_, i) => billed.filter(b => b.date === `${month}-${String(i + 1).padStart(2, '0')}`).reduce((sum, b) => sum + b.amountPaise, 0));
   const max = Math.max(...points, 10000);
   const min=Math.min(0,...points),range=max-min,zeroY=285+min/range*240;
@@ -28,8 +29,8 @@ export function BillingHome({ w, now }: { w: Workspace; now: Date }) {
   return <section className="billing-home" aria-label="Billing overview">
     <div className="billing-home-main">
       <div className="home-balances">
-        <a className="home-balance" href="#reports/Party%20Statement"><h2>Total receivable</h2><strong>{receivable ? money(receivable) : 'Nothing outstanding'}</strong><p>{receivable ? `From ${parties.size} ${parties.size === 1 ? 'customer' : 'customers'}` : 'Unpaid bills will appear here.'}</p><span className="balance-indicator incoming" aria-hidden="true">↓</span></a>
-        <a className="home-balance" href="#purchases"><h2>Total payable</h2><strong>{payable ? money(payable) : 'Nothing payable'}</strong><p>{payable?'Unpaid supplier bills':'You don’t have any payables as of now.'}</p><span className="balance-indicator payable" aria-hidden="true">↑</span></a>
+        <a className="home-balance" href="#reports/All%20parties"><h2>Total receivable</h2><strong>{receivable ? money(receivable) : 'Nothing outstanding'}</strong><p>{receivable ? supplierRefunds?'Includes supplier refunds':`From ${parties.size} ${parties.size === 1 ? 'customer' : 'customers'}` : 'Unpaid bills will appear here.'}</p><span className="balance-indicator incoming" aria-hidden="true">↓</span></a>
+        <a className="home-balance" href="#reports/All%20parties"><h2>Total payable</h2><strong>{payable ? money(payable) : 'Nothing payable'}</strong><p>{payable?customerRefunds?'Includes customer refunds':'Outstanding supplier balances':'You don’t have any payables as of now.'}</p><span className="balance-indicator payable" aria-hidden="true">↑</span></a>
       </div>
       <section className="home-sales" aria-labelledby="home-sales-title">
         <div className="home-sales-heading"><div><h2 id="home-sales-title">Total sale</h2><strong>{invoices.length ? money(sales) : 'No bills recorded'}</strong></div><label><span className="sr-only">Sales period</span><select value={period} onChange={e => setPeriod(e.target.value)}><option value="month">This month</option><option value="all">All time</option></select></label></div>

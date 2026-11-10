@@ -1,4 +1,4 @@
-import type { State, BusinessRecord } from '../src/types';
+import type { State, BusinessRecord, BusinessLine } from '../src/types';
 export const businessKinds: string[];
 export const documentKinds: string[];
 export function businessRows(state: State): BusinessRecord[];
@@ -10,3 +10,7 @@ export function loanSchedule(record: Pick<BusinessRecord,'amountPaise'|'data'>):
 export function loanPrincipalPaid(record: BusinessRecord, paid: number): number;
 export function createBusinessRecord(state: State, input: Record<string, unknown>, id?: string, createdAt?: string): BusinessRecord;
 export function validateBusinessRecords(state: State): boolean;
+
+export function lineNet(line: BusinessLine): number;
+export function returnableLines(state: State, record: BusinessRecord): BusinessLine[];
+export function refundDue(state: State, record: BusinessRecord): number;
